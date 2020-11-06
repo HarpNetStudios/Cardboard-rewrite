@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <head>
-<title>Project Crimson - Configuration</title>
+<title>Carmine Impact - Configuration</title>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <link rel="shortcut icon" href="favicon.ico" />
 </head>
 
 <body>
 
-<h1>Project Crimson - Configuration</h1>
+<h1>Carmine Impact - Configuration</h1>
 
 <div class="contents">
 <ul class="contents">
@@ -21,7 +21,7 @@
 <a href="#before_you_start"><b>Before You Start</b></a>
 </li>
 <li>
-<a href="#running_crimson"><b>Running Project Crimson</b></a>
+<a href="#running_carmine"><b>Running Carmine Impact</b></a>
 </li>
 <li>
 <a href="#command_line_options"><b>Command Line Options</b></a>
@@ -585,19 +585,19 @@
 
 <p>
 Take some time to read the rest of this document, as it describes options and commands that may be crucial to a successful
-experience with <i>Project Crimson</i>.
+experience with <i>Carmine Impact</i>.
 <br><br>
 Binding keys, as well as performance and gameplay related settings are documented below, these commands can be used in
 both the console and configuration scripts. In addition, you can also press "ESC" to go into the menu, which will provide
 you with an interface for navigating some (not all) of the commands.
 </p>
 
-<h2 id="running_crimson">Running Project Crimson</h2>
+<h2 id="running_carmine">Running Carmine</h2>
 <p>
 
-<tt>For Windows: Install and then run crimson_msvc.bat or select the entry from the Start menu.</tt>
+<tt>For Windows: Install and then run launcher.exe or launch from your software distribution platform (Itch, Steam, etc.).</tt>
 <br>
-<tt>For Linux: Extract and then run <i>./crimson_unix</i>. Needs a decent and compliant OpenGL implementation.</tt>
+<tt>For Linux: Extract and then run <i>./cardboard_unix</i>. Needs a decent and compliant OpenGL implementation.</tt>
 <br><br>
 The game and engine derives its simplicity from some rather brute force rendering methods, and as such it needs 
 a beefy machine to get good visual quality. It runs best with vertical sync (vsync) set to OFF and at high
@@ -643,7 +643,7 @@ Sets FSAA (Full Scene AntiAliasing) to N samples, i.e. -a4 is 4xFSAA
 
 <pre id="_minus_t">-t</pre>
 <p>
-Sets Crimson to run windowed.
+Sets the game to run windowed.
 </p>
 
 <pre id="_minus_qs">-qS</pre>
@@ -1187,7 +1187,7 @@ changes are not committed, if they select another field, changes will be lost.
 </p>
 
 <h2 id="server_commands">Server Configuration Commands</h2>
-<p>The following commands may be placed in the file "server-init.cfg" in the root Crimson directory to configure a dedicated server, or they may be used inside a running client to config
+<p>The following commands may be placed in the file "server-init.cfg" in the root Carmine directory to configure a dedicated server, or they may be used inside a running client to config
 ure a listen server:</p>
 
 <pre id="startlistenserver">startlistenserver [MASTER]</pre>

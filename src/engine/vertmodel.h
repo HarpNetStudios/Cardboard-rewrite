@@ -60,10 +60,10 @@ struct vertmodel : animmodel
 
         void calcbb(vec &bbmin, vec &bbmax, const matrix4x3 &m)
         {
-            loopj(numverts)
+            for(int j = 0; j < int(numverts); ++j)
             {
                 vec v = m.transform(verts[j].pos);
-                loopi(3)
+                for(int i = 0; i < 3; ++i)
                 {
                     bbmin[i] = min(bbmin[i], v[i]);
                     bbmax[i] = max(bbmax[i], v[i]);
@@ -101,10 +101,10 @@ struct vertmodel : animmodel
             voffset = offset;
             eoffset = idxs.length();
             minvert = 0xFFFF;
-            loopi(numtris)
+            for(int i = 0; i < int(numtris); ++i)
             {
                 tri &t = tris[i];
-                loopj(3) 
+                for(int j = 0; j < 3; ++j) 
                 {
                     int index = t.vert[j];
                     tcvert &tc = tcverts[index];
@@ -112,7 +112,7 @@ struct vertmodel : animmodel
                     T vv;
                     assignvert(vv, index, tc, v);
                     int htidx = hthash(v.pos)&(htlen-1);
-                    loopk(htlen)
+                    for(int k = 0; k < int(htlen); ++k)
                     {
                         int &vidx = htdata[(htidx+k)&(htlen-1)];
                         if(vidx < 0) { vidx = idxs.add(ushort(vverts.length())); vverts.add(vv); break; }
@@ -130,10 +130,10 @@ struct vertmodel : animmodel
         {
             voffset = offset;
             eoffset = idxs.length();
-            loopi(numtris)
+            for(int i = 0; i < int(numtris); ++i)
             {
                 tri &t = tris[i];
-                loopj(3) idxs.add(voffset+t.vert[j]);
+                for(int j = 0; j < 3; ++j) idxs.add(voffset+t.vert[j]);
             }
             minvert = voffset;
             maxvert = voffset + numverts-1;
@@ -151,7 +151,7 @@ struct vertmodel : animmodel
         void fillverts(T *vdata)
         {
             vdata += voffset;
-            loopi(numverts) fillvert(vdata[i], i, tcverts[i], verts[i]);
+            for(int i = 0; i < int(numverts); ++i) fillvert(vdata[i], i, tcverts[i], verts[i]);
         }
 
         void interpverts(const animstate &as, bool tangents, void * RESTRICT vdata, skin &s)
@@ -165,7 +165,7 @@ struct vertmodel : animmodel
             #define ipvertp(attrib)  v.attrib.lerp(pvert1[i].attrib, pvert2[i].attrib, as.prev.t).lerp(vec().lerp(vert1[i].attrib, vert2[i].attrib, as.cur.t), as.interp)
             #define ipbvertp(attrib, type) v.attrib.lerp(type().lerp(bpvert1[i].attrib, bpvert2[i].attrib, as.prev.t), type().lerp(bvert1[i].attrib, bvert2[i].attrib, as.cur.t), as.interp)
             #define iploop(type, body) \
-                loopi(numverts) \
+                for(int i = 0; i < int(numverts); ++i) \
                 { \
                     type &v = ((type * RESTRICT)vdata)[i]; \
                     body; \
@@ -232,7 +232,7 @@ struct vertmodel : animmodel
         {
             DELETEA(tags);
             if(ebuf) glDeleteBuffers_(1, &ebuf);
-            loopi(MAXVBOCACHE) 
+            for(int i = 0; i < int(MAXVBOCACHE); ++i)
             {
                 if(vbocache[i].vbuf) glDeleteBuffers_(1, &vbocache[i].vbuf);
             }
@@ -241,7 +241,7 @@ struct vertmodel : animmodel
 
         int findtag(const char *name)
         {
-            loopi(numtags) if(!strcmp(tags[i].name, name)) return i;
+            for(int i = 0; i < int(numtags); ++i) if(!strcmp(tags[i].name, name)) return i;
             return -1;
         }
 
@@ -354,7 +354,7 @@ struct vertmodel : animmodel
 
         void cleanup()
         {
-            loopi(MAXVBOCACHE)
+            for(int i = 0; i < int(MAXVBOCACHE); ++i)
             {
                 vbocacheentry &c = vbocache[i];
                 if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
@@ -385,13 +385,13 @@ struct vertmodel : animmodel
             if(numframes<=1) vc = vbocache;
             else
             {
-                loopi(MAXVBOCACHE)
+                for(int i = 0; i < int(MAXVBOCACHE); ++i)
                 {
                     vbocacheentry &c = vbocache[i];
                     if(!c.vbuf) continue;
                     if(c.as==*as) { vc = &c; break; }
                 }
-                if(!vc) loopi(MAXVBOCACHE) { vc = &vbocache[i]; if(!vc->vbuf || vc->millis < lastmillis) break; }
+                if(!vc) for(int i = 0; i < int(MAXVBOCACHE); ++i) { vc = &vbocache[i]; if(!vc->vbuf || vc->millis < lastmillis) break; }
             }
             if(!vc->vbuf) genvbo(tangents, *vc);
             if(numframes>1)

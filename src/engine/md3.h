@@ -74,7 +74,7 @@ struct md3 : vertloader<md3>
             numframes = header.numframes;
 
             int mesh_offset = header.ofs_meshes;
-            loopi(header.nummeshes)
+            for(int i = 0; i < int(header.nummeshes); ++i)
             {
                 vertmesh &m = *new vertmesh;
                 m.group = this;
@@ -90,12 +90,12 @@ struct md3 : vertloader<md3>
                 m.numtris = mheader.numtriangles; 
                 m.tris = new tri[m.numtris];
                 f->seek(mesh_offset + mheader.ofs_triangles, SEEK_SET);
-                loopj(m.numtris)
+                for(int j = 0; j < int(m.numtris); ++j)
                 {
                     md3triangle tri;
                     f->read(&tri, sizeof(md3triangle)); // read the triangles
                     lilswap(tri.vertexindices, 3);
-                    loopk(3) m.tris[j].vert[k] = (ushort)tri.vertexindices[k];
+                    for(int k = 0; k < 3; ++k) m.tris[j].vert[k] = (ushort)tri.vertexindices[k];
                 }
 
                 m.numverts = mheader.numvertices;
@@ -106,7 +106,7 @@ struct md3 : vertloader<md3>
                 
                 m.verts = new vert[numframes*m.numverts];
                 f->seek(mesh_offset + mheader.ofs_vertices, SEEK_SET); 
-                loopj(numframes*m.numverts)
+                for(int j = 0; j < int(numframes*m.numverts); ++j)
                 {
                     md3vertex v;
                     f->read(&v, sizeof(md3vertex)); // read the vertices
@@ -129,7 +129,7 @@ struct md3 : vertloader<md3>
                 f->seek(header.ofs_tags, SEEK_SET);
                 md3tag tag;
 
-                loopi(header.numframes*header.numtags)
+                for(int i = 0; i < int(header.numframes*header.numtags); ++i)
                 {
                     f->read(&tag, sizeof(md3tag));
                     lilswap(tag.translation, 12);
@@ -137,9 +137,9 @@ struct md3 : vertloader<md3>
                     matrix4x3 &m = tags[i].transform;
                     tag.translation[1] *= -1;
                     // undo the -y
-                    loopj(3) tag.rotation[1][j] *= -1;
+                    for(int j = 0; j < 3; ++j) tag.rotation[1][j] *= -1;
                     // then restore it
-                    loopj(3) tag.rotation[j][1] *= -1;
+                    for(int j = 0; j < 3; ++j) tag.rotation[j][1] *= -1;
                     m.a = vec(tag.rotation[0]);
                     m.b = vec(tag.rotation[1]);
                     m.c = vec(tag.rotation[2]);

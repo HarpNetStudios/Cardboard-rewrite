@@ -1,7 +1,7 @@
 #include "engine.h"
 
 // a gentle reminder to rework the awful font system
-//#include "sdl_ttf.h"
+#include "sdl_ttf.h"
 
 static hashnameset<font> fonts;
 static font *fontdef = NULL;
@@ -68,7 +68,7 @@ void fontchar(int *x, int *y, int *w, int *h, int *offsetx, int *offsety, int *a
 void fontskip(int *n)
 {
     if(!fontdef) return;
-    loopi(max(*n, 1))
+    for(int i = 0; i < int(max(*n, 1)); ++i)
     {
         font::charinfo &c = fontdef->chars.add();
         c.x = c.y = c.w = c.h = c.offsetx = c.offsety = c.advance = c.tex = 0;

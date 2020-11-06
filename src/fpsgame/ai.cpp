@@ -118,11 +118,11 @@ namespace ai
             {
                 const int aiskew[NUMGUNS] = { 1, 10, 50, 5, 20, 1, 100 };
                 #define rndaioffset(r) ((rnd(int(r*aiskew[d->gunselect]*2)+1)-(r*aiskew[d->gunselect]))*(1.f/float(max(d->skill, 1))))
-                loopk(3) d->ai->aimrnd[k] = rndaioffset(e->radius);
+                for(int k = 0; k < 3; ++k) d->ai->aimrnd[k] = rndaioffset(e->radius);
                 int dur = (d->skill+10)*10;
                 d->ai->lastaimrnd = lastmillis+dur+rnd(dur);
             }
-            loopk(3) o[k] += d->ai->aimrnd[k];
+            for(int k = 0; k < 3; ++k) o[k] += d->ai->aimrnd[k];
         }
         return o;
     }
@@ -385,7 +385,7 @@ namespace ai
     bool hasgoodammo(fpsent *d)
     {
         static const int goodguns[] = { GUN_CG, GUN_RL, GUN_SG, GUN_RIFLE };
-        loopi(sizeof(goodguns)/sizeof(goodguns[0])) if(d->hasammo(goodguns[0])) return true;
+        for(int i = 0; i < int(sizeof(goodguns)/sizeof(goodguns[0])); ++i) if(d->hasammo(goodguns[0])) return true;
         if(d->ammo[GUN_GL] > 5) return true;
         return false;
     }
@@ -453,7 +453,7 @@ namespace ai
         while(!interests.empty())
         {
             int q = interests.length()-1;
-            loopi(interests.length()-1) if(interests[i].score < interests[q].score) q = i;
+            for(int i = 0; i < int(interests.length()-1); ++i) if(interests[i].score < interests[q].score) q = i;
             interest n = interests.removeunordered(q);
             bool proceed = true;
             if(!ignore) switch(n.state)
@@ -509,7 +509,7 @@ namespace ai
         while(!interests.empty())
         {
             int q = interests.length()-1;
-            loopi(interests.length()-1) if(interests[i].score < interests[q].score) q = i;
+            for(int i = 0; i < int(interests.length()-1); ++i) if(interests[i].score < interests[q].score) q = i;
             interest n = interests.removeunordered(q);
             bool proceed = true;
             switch(n.state)
@@ -598,7 +598,7 @@ namespace ai
 					case I_AMMO:
                     default:
                     {
-						loopi(6) wantsitem = !wantsitem && d->ammo[i+1] <= (d->ai->weappref == i+1 ? guns[i+1].ammoadd : guns[i+1].ammoadd / 2);
+						for(int i = 0; i < 6; ++i) wantsitem = !wantsitem && d->ammo[i+1] <= (d->ai->weappref == i+1 ? guns[i+1].ammoadd : guns[i+1].ammoadd / 2);
                         break;
                     }
                 }
@@ -760,7 +760,7 @@ namespace ai
 
     int wpspot(fpsent *d, int n, bool check = false)
     {
-        if(iswaypoint(n)) loopk(2)
+        if(iswaypoint(n)) for(int k = 0; k < 2; ++k)
         {
             vec epos = waypoints[n].o;
             int entid = obstacles.remap(d, n, epos, k!=0);
@@ -780,7 +780,7 @@ namespace ai
         {
             waypoint &w = waypoints[n];
             static vector<int> linkmap; linkmap.setsize(0);
-            loopi(MAXWAYPOINTLINKS)
+            for(int i = 0; i < int(MAXWAYPOINTLINKS); ++i)
             {
                 if(!w.links[i]) break;
                 if(iswaypoint(w.links[i]) && !d->ai->hasprevnode(w.links[i]) && d->ai->route.find(w.links[i]) < 0)
@@ -793,7 +793,7 @@ namespace ai
 
     bool anynode(fpsent *d, aistate &b, int len = NUMPREVNODES)
     {
-        if(iswaypoint(d->lastnode)) loopk(2)
+        if(iswaypoint(d->lastnode)) for(int k = 0; k < 2; ++k)
         {
             d->ai->clear(k ? true : false);
             int n = randomlink(d, d->lastnode);
@@ -801,7 +801,7 @@ namespace ai
             {
                 d->ai->route.add(n);
                 d->ai->route.add(d->lastnode);
-                loopi(len)
+                for(int i = 0; i < int(len); ++i)
                 {
                     n = randomlink(d, n);
                     if(iswaypoint(n)) d->ai->route.insert(0, n);
@@ -820,7 +820,7 @@ namespace ai
         if(last < 500 || n < 3) return false; // route length is too short
         d->ai->lastcheck = lastmillis;
         int w = iswaypoint(d->lastnode) ? d->lastnode : d->ai->route[n], c = min(n-1, NUMPREVNODES);
-        loopj(c) // check ahead to see if we need to go around something
+        for(int j = 0; j < int(c); ++j) // check ahead to see if we need to go around something
         {
             int p = n-j-1, v = d->ai->route[p];
             if(d->ai->hasprevnode(v) || obstacles.find(v, d)) // something is in the way, try to remap around it
@@ -1143,7 +1143,7 @@ namespace ai
             if(d->hasammo(d->ai->weappref) && hasrange(d, e, d->ai->weappref)) gun = d->ai->weappref;
             else
             {
-                loopi(sizeof(gunprefs)/sizeof(gunprefs[0])) if(d->hasammo(gunprefs[i]) && hasrange(d, e, gunprefs[i]))
+                for(int i = 0; i < int(sizeof(gunprefs)/sizeof(gunprefs[0])); ++i) if(d->hasammo(gunprefs[i]) && hasrange(d, e, gunprefs[i]))
                 {
                     gun = gunprefs[i];
                     break;
@@ -1344,7 +1344,7 @@ namespace ai
                 particle_flare(pos, waypoints[d->ai->targnode].o, 1, PART_LIGHTNING, 0xFF00FF);
             if(iswaypoint(d->lastnode))
                 particle_flare(pos, waypoints[d->lastnode].o, 1, PART_LIGHTNING, 0xFFFF00);
-            loopi(NUMPREVNODES) if(iswaypoint(d->ai->prevnodes[i]))
+            for(int i = 0; i < int(NUMPREVNODES); ++i) if(iswaypoint(d->ai->prevnodes[i]))
             {
                 particle_flare(pos, waypoints[d->ai->prevnodes[i]].o, 1, PART_LIGHTNING, 0x884400);
                 pos = waypoints[d->ai->prevnodes[i]].o;
@@ -1444,10 +1444,10 @@ namespace ai
                 findwaypointswithin(camera1->o, 0, showwaypointsradius, close);
                 len = close.length();
             }
-            loopi(len)
+            for(int i = 0; i < int(len); ++i)
             {
                 waypoint &w = waypoints[showwaypointsradius ? close[i] : i];
-                loopj(MAXWAYPOINTLINKS)
+                for(int j = 0; j < int(MAXWAYPOINTLINKS); ++j)
                 {
                      int link = w.links[j];
                      if(!link) break;

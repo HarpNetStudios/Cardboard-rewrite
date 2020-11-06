@@ -118,7 +118,7 @@ struct iqm : skelloader<iqm>
             float *vpos = NULL, *vnorm = NULL, *vtan = NULL, *vtc = NULL;
             uchar *vindex = NULL, *vweight = NULL;
             iqmvertexarray *vas = (iqmvertexarray *)&buf[hdr.ofs_vertexarrays];
-            loopi(hdr.num_vertexarrays)
+            for(int i = 0; i < int(hdr.num_vertexarrays); ++i)
             {
                 iqmvertexarray &va = vas[i];
                 switch(va.type)
@@ -143,7 +143,7 @@ struct iqm : skelloader<iqm>
                 {
                     skel->numbones = hdr.num_joints;
                     skel->bones = new boneinfo[skel->numbones]; 
-                    loopi(hdr.num_joints)
+                    for(int i = 0; i < int(hdr.num_joints); ++i)
                     {
                         iqmjoint &j = joints[i]; 
                         boneinfo &b = skel->bones[i];
@@ -166,7 +166,7 @@ struct iqm : skelloader<iqm>
                     skel->linkchildren();
             }
 
-            loopi(hdr.num_meshes)
+            for(int i = 0; i < int(hdr.num_meshes); ++i)
             {
                 iqmmesh &im = imeshes[i];
                 skelmesh *m = new skelmesh;
@@ -192,7 +192,7 @@ struct iqm : skelloader<iqm>
                       *mtan = vtan ? vtan + 4*fv : NULL,
                       *mtc = vtc ? vtc + 2*fv : NULL;
                 uchar *mindex = vindex ? vindex + 4*fv : NULL, *mweight = vweight ? vweight + 4*fv : NULL;
-                loopj(im.num_vertexes)
+                for(int j = 0; j < int(im.num_vertexes); ++j)
                 {
                     vert &v = m->verts[j];
                     v.pos = vec(mpos[0], -mpos[1], mpos[2]);
@@ -218,7 +218,7 @@ struct iqm : skelloader<iqm>
                     {
                         blendcombo c;
                         int sorted = 0;
-                        loopk(4) sorted = c.addweight(sorted, mweight[k], mindex[k]);
+                        for(int k = 0; k < 4; ++k) sorted = c.addweight(sorted, mweight[k], mindex[k]);
                         mweight += 4;
                         mindex += 4;
                         c.finalize(sorted);
@@ -229,7 +229,7 @@ struct iqm : skelloader<iqm>
                 m->numtris = im.num_triangles;
                 if(m->numtris) m->tris = new tri[m->numtris]; 
                 iqmtriangle *mtris = tris + im.first_triangle;
-                loopj(im.num_triangles)
+                for(int j = 0; j < int(im.num_triangles); ++j)
                 {
                     tri &t = m->tris[j];
                     t.vert[0] = mtris->vertex[0] - fv;
@@ -260,7 +260,7 @@ struct iqm : skelloader<iqm>
             iqmpose *poses = (iqmpose *)&buf[hdr.ofs_poses];
             iqmanim *anims = (iqmanim *)&buf[hdr.ofs_anims];
             ushort *frames = (ushort *)&buf[hdr.ofs_frames];
-            loopi(hdr.num_anims)
+            for(int i = 0; i < int(hdr.num_anims); ++i)
             {
                 iqmanim &a = anims[i];
                 oldstring name;
@@ -282,10 +282,10 @@ struct iqm : skelloader<iqm>
                 animbones += skel->numframes*skel->numbones;
                 skel->numframes += a.num_frames;
                 ushort *animdata = &frames[a.first_frame*hdr.num_framechannels];
-                loopj(a.num_frames)
+                for(int j = 0; j < int(a.num_frames); ++j)
                 {
                     dualquat *frame = &animbones[j*skel->numbones];
-                    loopk(skel->numbones)
+                    for(int k = 0; k < int(skel->numbones); ++k)
                     {
                         iqmpose &p = poses[k];
                         vec pos;

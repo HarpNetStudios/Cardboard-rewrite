@@ -3,7 +3,7 @@
 #include <engine.h>
 #include <game.h>
 
-oldstring gametoken = "";
+oldstring gametoken = "OFFLINE";
 
 extern void cleargamma();
 
@@ -199,7 +199,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
     }
     else if(lastupdate != lastmillis) lastupdate = lastmillis;
 
-    loopi(restore ? 1 : 3)
+    for(int i = 0; i < int(restore ? 1 : 3); ++i)
     {
         hudmatrix.ortho(0, w, h, 0, -1, 1);
         resethudmatrix();
@@ -825,7 +825,7 @@ void setupscreen()
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
     }
-    loopi(sizeof(configs)/sizeof(configs[0]))
+    for(int i = 0; i < int(sizeof(configs)/sizeof(configs[0])); ++i)
     {
         config = configs[i];
         if(!depthbits && config&1) continue;
@@ -846,7 +846,7 @@ void setupscreen()
     #else
         static const int glversions[] = { 33, 32, 31, 30, 20 };
     #endif
-        loopj(sizeof(glversions)/sizeof(glversions[0]))
+        for(int j = 0; j < int(sizeof(glversions)/sizeof(glversions[0])); ++j)
         {
             glcompat = glversions[j] <= 30 ? 1 : 0;
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glversions[j] / 10);
@@ -1240,7 +1240,7 @@ int fpspos = 0, fpshistory[MAXFPSHISTORY];
 
 void resetfpshistory()
 {
-    loopi(MAXFPSHISTORY) fpshistory[i] = 1;
+    for(int i = 0; i < int(MAXFPSHISTORY); ++i) fpshistory[i] = 1;
     fpspos = 0;
 }
 
@@ -1253,7 +1253,7 @@ void updatefpshistory(int millis)
 void getfps(int &fps, int &bestdiff, int &worstdiff)
 {
     int total = fpshistory[MAXFPSHISTORY-1], best = total, worst = total;
-    loopi(MAXFPSHISTORY-1)
+    for(int i = 0; i < int(MAXFPSHISTORY-1); ++i)
     {
         int millis = fpshistory[i];
         total += millis;
@@ -1367,56 +1367,6 @@ void getuserinfo_(bool debug, bool first) {
 		offline = 1;
 	}
 }
-
-void testtar() {
-	mtar_t tar;
-	const char* str1 = "Hello world";
-	const char* str2 = "Goodbye world";
-
-	/* Open archive for writing */
-	mtar_open(&tar, "test.tar", "w");
-
-	/* Write strings to files `test1.txt` and `test2.txt` */
-	mtar_write_file_header(&tar, "test1.txt", strlen(str1));
-	mtar_write_data(&tar, str1, strlen(str1));
-	mtar_write_file_header(&tar, "test2.txt", strlen(str2));
-	mtar_write_data(&tar, str2, strlen(str2));
-
-	/* Finalize -- this needs to be the last thing done before closing */
-	mtar_finalize(&tar);
-
-	/* Close archive */
-	mtar_close(&tar);
-}
-
-void testopentar() {
-	mtar_t tar;
-	mtar_header_t h;
-	char* p;
-
-	/* Open archive for reading */
-	mtar_open(&tar, "test.tar", "r");
-	conoutf("opened test.tar");
-
-	/* Print all file names and sizes */
-	while ((mtar_read_header(&tar, &h)) != MTAR_ENULLRECORD) {
-		conoutf("%s (%d bytes)", h.name, h.size);
-		mtar_next(&tar);
-	}
-
-	/* Load and print contents of file "test2.txt" */
-	mtar_find(&tar, "test2.txt", &h);
-	p = (char*)calloc(1, h.size + 1);
-	mtar_read_data(&tar, p, h.size);
-	conoutf("%s", p);
-	free(p);
-
-	/* Close archive */
-	mtar_close(&tar);
-}
-
-COMMAND(testtar, "");
-COMMAND(testopentar, "");
 
 COMMANDN(getuserinfo, getuserinfo_, "i");
 
@@ -1538,10 +1488,10 @@ int main(int argc, char **argv)
     gl_checkextensions();
     gl_init();
     notexture = textureload("packages/textures/notexture.png");
-    if(!notexture) fatal("could not find core textures (are you running in the right directory?)");
+    if(!notexture) fatal("could not find core textures (are you using the launcher?)");
 
     logoutf("init: console");
-	if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (are you running in the right directory?)"); // this is the first config file we load.
+	if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (are you using the launcher?)"); // this is the first config file we load.
     if(!execfile("data/lang.cfg", false)) fatal("cannot find lang config"); // after this point in execution, translations are safe to use.
     if(!execfile("data/font.cfg", false)) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");

@@ -17,10 +17,11 @@ namespace discord
 	}
 
 	void initDiscord() {
+		conoutf(CON_DEBUG, "Attempting to initialize Discord integration...");
 		whatAmI = discord::Core::Create(623616609952464936, DiscordCreateFlags_NoRequireDiscord, &core);
 		if(discord::connected()) {
 			core->SetLogHook(LogLevel::Debug, discordLogging);
-			conoutf("Discord intergation initialized successfully!");
+			conoutf(CON_DEBUG, "Discord intergation initialized successfully!");
 		}
 	}
 
@@ -49,9 +50,9 @@ namespace discord
 				activity.SetState("SOMETHING BROKE");
 				activity.SetDetails("Tell the #bugs channel about what you did!");
 				activity.GetAssets().SetLargeImage("logo-large");
-				activity.GetAssets().SetLargeText("Tell the #bugs channel about what you did!");
+				activity.GetAssets().SetLargeText("https://hnss.ga/bug-report");
 				activity.GetAssets().SetSmallImage("turkey-test");
-				activity.GetAssets().SetSmallText("Tell the #bugs channel about what you did!");
+				activity.GetAssets().SetSmallText("https://hnss.ga/bug-report");
 				break;
 			}
 			if(gamestate != D_MENU) {
@@ -84,6 +85,7 @@ namespace discord
 					"maze",
 					"neo_falls",
 					"neo_noir",
+					"precipice",
 					"retrograde",
 					"ruins",
 					"secondevermap",

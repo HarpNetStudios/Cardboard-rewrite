@@ -54,24 +54,15 @@
   #endif
 #endif
 
-
-
-#ifdef WIN32
-	#ifndef DISCORD
-		#define DISCORD
-	#endif
-#endif
-
 #ifdef DISCORD
-#include <discord_game_sdk.h>
-#include <discord.h>
+#include <discord-game-sdk/discord_game_sdk.h>
+#include <discord-game-sdk/discord.h>
 #endif
 
 #include <enet/enet.h>
 #include <curl/curl.h>
-#include <cJSON/cJSON.h>
+#include <cjson/cJSON.h>
 #include <zlib.h>
-#include <microtar.h>
 
 #include "translate.h"
 

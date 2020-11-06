@@ -46,6 +46,11 @@ namespace game
             if(a->flags > b->flags) return true;
             if(a->flags < b->flags) return false;
         }
+        if(m_race)
+        {
+            if(a->racerank > b->racerank) return true;
+            if(a->racerank < b->racerank) return false;
+        }
         if(a->frags > b->frags) return true;
         if(a->frags < b->frags) return false;
         return strcmp(a->name, b->name) < 0;
@@ -85,10 +90,6 @@ namespace game
         }
     }
 
-    struct scoregroup : teamscore
-    {
-        vector<fpsent *> players;
-    };
     static vector<scoregroup *> groups;
     static vector<fpsent *> spectators;
 
@@ -117,7 +118,7 @@ namespace game
             if(o->state==CS_SPECTATOR) { spectators.add(o); continue; }
             const char *team = m_teammode && o->team[0] ? o->team : NULL;
             bool found = false;
-            loopj(numgroups)
+            for(int j = 0; j < int(numgroups); ++j)
             {
                 scoregroup &g = *groups[j];
                 if(team!=g.team && (!team || !g.team || strcmp(team, g.team))) continue;
@@ -134,7 +135,7 @@ namespace game
             g.players.setsize(0);
             g.players.add(o);
         }
-        loopi(numgroups) groups[i]->players.sort(playersort);
+        for(int i = 0; i < int(numgroups); ++i) groups[i]->players.sort(playersort);
         spectators.sort(playersort);
         groups.sort(scoregroupcmp, 0, numgroups);
         return numgroups;
@@ -194,7 +195,7 @@ namespace game
         g.separator();
 
         int numgroups = groupplayers();
-        loopk(numgroups)
+        for(int k = 0; k < int(numgroups); ++k)
         {
             if((k%2)==0) g.pushlist(); // horizontal
 

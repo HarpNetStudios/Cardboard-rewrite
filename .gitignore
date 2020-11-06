@@ -27,5 +27,8 @@
 
 *msvc.lib
 
+# CMake trash
+/build
+
 # Directories that aren't public
 /res/_Private

@@ -237,7 +237,7 @@ namespace rawinput
             return -1;
         }
         windev candidate;
-        loopi(trylist)
+        for(int i = 0; i < int(trylist); ++i)
         {
             candidate.device = rids[i].hDevice;
             candidate.type = rids[i].dwType;
@@ -461,7 +461,7 @@ namespace rawinput
                 break;
             case EV_KEY:
                 // search in lookup table for a corresponding button code to emit
-                loopi(numbuttons) if(lookup[i].native == ev.code)
+                for(int i = 0; i < int(numbuttons); ++i) if(lookup[i].native == ev.code)
                 {
                     addevent(rawevent(REV_BUTTON, lookup[i].translate, ev.value));
                     break;
@@ -536,7 +536,7 @@ namespace rawinput
     {
         oldstring path;
         oldstring name;
-        loopi(32)
+        for(int i = 0; i < 32; ++i)
         {
             formatstring(path, "/dev/input/event%d", i);
             int fd = open(path, O_RDONLY);

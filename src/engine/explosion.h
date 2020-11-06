@@ -15,10 +15,10 @@ namespace sphere
         numverts = (stacks+1)*(slices+1);
         verts = new vert[numverts];
         float ds = 1.0f/slices, dt = 1.0f/stacks, t = 1.0f;
-        loopi(stacks+1)
+        for(int i = 0; i < int(stacks+1); ++i)
         {
             float rho = M_PI*(1-t), s = 0.0f, sinrho = i && i < stacks ? sin(rho) : 0, cosrho = !i ? 1 : (i < stacks ? cos(rho) : -1);
-            loopj(slices+1)
+            for(int j = 0; j < int(slices+1); ++j)
             {
                 float theta = j==slices ? 0 : 2*M_PI*s;
                 vert &v = verts[i*(slices+1) + j];
@@ -33,9 +33,9 @@ namespace sphere
         numindices = (stacks-1)*slices*3*2;
         indices = new ushort[numindices];
         GLushort *curindex = indices;
-        loopi(stacks)
+        for(int i = 0; i < int(stacks); ++i)
         {
-            loopk(slices)
+            for(int k = 0; k < int(slices); ++k)
             {
                 int j = i%2 ? slices-k-1 : k;
                 if(i)
@@ -163,14 +163,14 @@ struct fireballrenderer : listrenderer
             dir.mul(psize/dist).add(p->o);
             float depth = depthfxtex.eyedepth(dir);
 
-            loopk(3)
+            for(int k = 0; k < 3; ++k)
             {
                 bbmin[k] = min(bbmin[k], p->o[k] - psize);
                 bbmax[k] = max(bbmax[k], p->o[k] + psize);
             }
 
             int pos = numranges;
-            loopi(numranges) if(depth < ranges[i]) { pos = i; break; }
+            for(int i = 0; i < int(numranges); ++i) if(depth < ranges[i]) { pos = i; break; }
             if(pos >= maxranges) continue;
 
             if(numranges > pos)
@@ -236,7 +236,7 @@ struct fireballrenderer : listrenderer
         binddepthfxparams(depthfxblend, inside ? blend/(2*255.0f) : 0, 2*(p->size + pmax)*WOBBLE >= depthfxblend, p);
 
         int passes = !reflecting && !refracting && inside ? 2 : 1;
-        loopi(passes)
+        for(int i = 0; i < int(passes); ++i)
         {
             gle::color(p->color, i ? blend/2 : blend);
             if(i) glDepthFunc(GL_GEQUAL);

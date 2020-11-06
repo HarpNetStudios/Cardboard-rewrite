@@ -713,11 +713,11 @@ struct gui : g3d_gui
         if(vslot.rotation)
         {
 			const texrotation &r = texrotations[vslot.rotation];
-			if(r.swapxy) { swap(xoff, yoff); loopk(4) swap(tc[k].x, tc[k].y); }
-			if(r.flipx) { xoff *= -1; loopk(4) tc[k].x *= -1; }
-			if(r.flipy) { yoff *= -1; loopk(4) tc[k].y *= -1; }
+			if(r.swapxy) { swap(xoff, yoff); for(int k = 0; k < 4; ++k) swap(tc[k].x, tc[k].y); }
+			if(r.flipx) { xoff *= -1; for(int k = 0; k < 4; ++k) tc[k].x *= -1; }
+			if(r.flipy) { yoff *= -1; for(int k = 0; k < 4; ++k) tc[k].y *= -1; }
         }
-        loopk(4) { tc[k].x = tc[k].x/xt - xoff/t->xs; tc[k].y = tc[k].y/yt - yoff/t->ys; }
+        for(int k = 0; k < 4; ++k) { tc[k].x = tc[k].x/xt - xoff/t->xs; tc[k].y = tc[k].y/yt - yoff/t->ys; }
         if(slot.loaded) gle::color(vec(color).mul(vslot.colorscale));
         else gle::color(color);
         glBindTexture(GL_TEXTURE_2D, t->id);
@@ -845,12 +845,12 @@ struct gui : g3d_gui
         int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
         float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
 
-        loopj(passes)
+        for(int j = 0; j < int(passes); ++j)
         {
             bool quads = false;
             if(passes>1) glDepthFunc(j ? GL_LEQUAL : GL_GREATER);
             gle::color(j ? light : vec(1, 1, 1), passes<=1 || j ? alpha : alpha/2); //ghost when its behind something in depth
-            loopi(n)
+            for(int i = 0; i < int(n); ++i)
             {
                 const patch &p = patches[start+i];
                 int left = skinx[p.left]*SKIN_SCALE, right = skinx[p.right]*SKIN_SCALE,
@@ -1236,7 +1236,7 @@ bool g3d_key(int code, bool isdown)
                     if(windowhit->gui2d)
                     {
                         vec origin = *guis2d[0].savedorigin;
-                        loopj(guis2d.length()-1) *guis2d[j].savedorigin = *guis2d[j + 1].savedorigin;
+                        for(int j = 0; j < int(guis2d.length()-1); ++j) *guis2d[j].savedorigin = *guis2d[j + 1].savedorigin;
                         *guis2d.last().savedorigin = origin;
                         if(guis2d.length() > 1)
                         {

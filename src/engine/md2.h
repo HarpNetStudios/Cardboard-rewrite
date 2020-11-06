@@ -93,7 +93,7 @@ struct md2 : vertloader<md2>
                 bool isfan = numvertex<0;
                 if(isfan) numvertex = -numvertex;
                 idxs.setsize(0);
-                loopi(numvertex)
+                for(int i = 0; i < int(numvertex); ++i)
                 {
                     union { int i; float f; } u, v;
                     u.i = *command++;
@@ -111,7 +111,7 @@ struct md2 : vertloader<md2>
                     }
                     idxs.add(*idx);
                 }
-                loopi(numvertex-2)
+                for(int i = 0; i < int(numvertex-2); ++i)
                 {
                     tri &t = tris.add();
                     if(isfan)
@@ -120,7 +120,7 @@ struct md2 : vertloader<md2>
                         t.vert[1] = idxs[i+1];
                         t.vert[2] = idxs[i+2];
                     }
-                    else loopk(3) t.vert[k] = idxs[i&1 && k ? i+(1-(k-1))+1 : i+k];
+                    else for(int k = 0; k < 3; ++k) t.vert[k] = idxs[i&1 && k ? i+(1-(k-1))+1 : i+k];
                 }
             }
         }
@@ -176,7 +176,7 @@ struct md2 : vertloader<md2>
             md2_vertex *tmpverts = new md2_vertex[header.numvertices];
             int frame_offset = header.offsetframes;
             vert *curvert = m.verts;
-            loopi(header.numframes)
+            for(int i = 0; i < int(header.numframes); ++i)
             {
                 md2_frame frame;
                 file->seek(frame_offset, SEEK_SET);
@@ -184,7 +184,7 @@ struct md2 : vertloader<md2>
                 lilswap(frame.scale, 6);
 
                 file->read(tmpverts, header.numvertices*sizeof(md2_vertex));
-                loopj(m.numverts)
+                for(int j = 0; j < int(m.numverts); ++j)
                 {
                     const md2_vertex &v = tmpverts[vgen[j]];
                     curvert->pos = vec(v.vertex[0]*frame.scale[0]+frame.translate[0],

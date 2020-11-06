@@ -166,15 +166,15 @@ void filtertext(char *dst, const char *src, bool whitespace, bool forcespace, si
             if(!*++src) break;
             continue;
         }
-        if(!iscubeprint(c))
+        if(!iscubeprint(c)) // if it's not printable
         {
-            if(!iscubespace(c) || !whitespace) continue;
-            if(forcespace) c = ' ';
+            if(!iscubespace(c) || !whitespace) continue; // it's not a space or a character, ignore it
+            if(forcespace) c = ' ';                      // or, if forcespace, then replace it with a space instead
         }
-        *dst++ = c;
-        if(!--len) break;
+        *dst++ = c; // add the character
+        if(!--len) break; // no more characters left, bail out
     }
-    *dst = '\0';
+    *dst = '\0'; // zero-terminated strings be like -Y
 }
 
 void ipmask::parse(const char *name)
@@ -182,7 +182,7 @@ void ipmask::parse(const char *name)
     union { uchar b[sizeof(enet_uint32)]; enet_uint32 i; } ipconv, maskconv;
     ipconv.i = 0;
     maskconv.i = 0;
-    loopi(4)
+    for(int i = 0; i < 4; ++i)
     {
         char *end = NULL;
         int n = strtol(name, &end, 10);
@@ -213,10 +213,10 @@ int ipmask::print(char *buf) const
     ipconv.i = ip;
     maskconv.i = mask;
     int lastdigit = -1;
-    loopi(4) if(maskconv.b[i])
+    for(int i = 0; i < 4; ++i) if(maskconv.b[i])
     {
         if(lastdigit >= 0) *buf++ = '.';
-        loopj(i - lastdigit - 1) { *buf++ = '*'; *buf++ = '.'; }
+        for(int j = 0; j < int(i-lastdigit-1); ++j) { *buf++ = '*'; *buf++ = '.'; }
         buf += sprintf(buf, "%d", ipconv.b[i]);
         lastdigit = i;
     }

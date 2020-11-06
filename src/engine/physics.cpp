@@ -36,7 +36,7 @@ void resetclipplanes()
 
 #define INTERSECTPLANES(setentry, exit) \
     float enterdist = -1e16f, exitdist = 1e16f; \
-    loopi(p.size) \
+    for(int i = 0; i < int(p.size); ++i) \
     { \
         float pdist = p.p[i].dist(v), facing = ray.dot(p.p[i]); \
         if(facing < 0) \
@@ -62,7 +62,7 @@ void resetclipplanes()
     }
 
 #define INTERSECTBOX(setentry, exit) \
-    loop(i, 3) \
+    for(int i = 0; i < 3; ++i) \
     { \
         if(ray[i]) \
         { \
@@ -188,7 +188,7 @@ static float shadowent(octaentities *oc, const vec &o, const vec &ray, float rad
     if(!insideworld(o)) \
     { \
         float disttoworld = 0, exitworld = 1e16f; \
-        loopi(3) \
+        for(int i = 0; i < 3; ++i) \
         { \
             float c = v[i]; \
             if(c<0 || c>=worldsize) \
@@ -586,7 +586,7 @@ static struct dynentcacheentry
 void cleardynentcache()
 {
     dynentframe++;
-    if(!dynentframe || dynentframe == 1) loopi(DYNENTCACHESIZE) dynentcache[i].frame = 0;
+    if(!dynentframe || dynentframe == 1) for(int i = 0; i < int(DYNENTCACHESIZE); ++i) dynentcache[i].frame = 0;
     if(!dynentframe) dynentframe = 1;
 }
 
@@ -603,7 +603,7 @@ const vector<physent *> &checkdynentcache(int x, int y)
     dec.frame = dynentframe;
     dec.dynents.shrink(0);
     int numdyns = game::numdynents(), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
-    loopi(numdyns)
+    for(int i = 0; i < int(numdyns); ++i)
     {
         dynent *d = game::iterdynents(i);
         if(d->state != CS_ALIVE ||
@@ -862,7 +862,7 @@ static bool fuzzycollideplanes(physent *d, const vec &dir, float cutoff, const c
 
     E entvol(d);
     int bestplane = -1;
-    loopi(p.size)
+    for(int i = 0; i < int(p.size); ++i)
     {
         const plane &w = p.p[i];
         vec pw = entvol.supportpoint(vec(w).neg());
@@ -946,7 +946,7 @@ static bool cubecollideplanes(physent *d, const vec &dir, float cutoff, const cu
     CHECKSIDE(O_TOP, entvol.bottom() - (p.o.z + p.r.z), dir.z, d->zmargin-(d->eyeheight+d->aboveeye)/3.0f, vec(0, 0, 1));
 
     int bestplane = -1;
-    loopi(p.size)
+    for(int i = 0; i < int(p.size); ++i)
     {
         const plane &w = p.p[i];
         vec pw = entvol.supportpoint(vec(w).neg());
@@ -1476,7 +1476,7 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric, float gra
     }
     else d->vel.z -= grav*gravity*secs;
     vec old(d->o);
-    loopi(2)
+    for(int i = 0; i < 2; ++i)
     {
         vec dir(d->vel);
         dir.mul(secs);
@@ -1521,10 +1521,10 @@ void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space)
     bbmax.z += obstacle->aboveeye+d->eyeheight;
     bbmax.add(space);
 
-    loopi(3) if(d->o[i] <= bbmin[i] || d->o[i] >= bbmax[i]) return;
+    for(int i = 0; i < 3; ++i) if(d->o[i] <= bbmin[i] || d->o[i] >= bbmax[i]) return;
 
     float mindist = 1e16f;
-    loopi(3) if(dir[i] != 0)
+    for(int i = 0; i < 3; ++i) if(dir[i] != 0)
     {
         float dist = ((dir[i] > 0 ? bbmax[i] : bbmin[i]) - d->o[i]) / dir[i];
         mindist = min(mindist, dist);
@@ -1539,7 +1539,7 @@ bool movecamera(physent *pl, const vec &dir, float dist, float stepdist)
 
     vec d(dir);
     d.mul(dist/steps);
-    loopi(steps)
+    for(int i = 0; i < int(steps); ++i)
     {
         vec oldpos(pl->o);
         pl->o.add(d);
@@ -1890,7 +1890,7 @@ bool moveplayer(physent* pl, int moveres, bool local, int curtime)
 			pl->falling = vec(0, 0, 0);
 		}
 		d.mul(f);
-		loopi(moveres) if(!spacemove(pl, d) && ++collisions < 5) i--; // discrete steps collision detection & sliding
+		for(int i = 0; i < int(moveres); ++i) if(!spacemove(pl, d) && ++collisions < 5) i--; // discrete steps collision detection & sliding
 	}
 	else                          // apply velocity with collision
 	{
@@ -1899,7 +1899,7 @@ bool moveplayer(physent* pl, int moveres, bool local, int curtime)
 		int collisions = 0;
 
 		d.mul(f);
-		loopi(moveres) if(!move(pl, d) && ++collisions < 5) i--; // discrete steps collision detection & sliding
+		for(int i = 0; i < int(moveres); ++i) if(!move(pl, d) && ++collisions < 5) i--; // discrete steps collision detection & sliding
 		if(timeinair > 800 && !pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
 		{
 			game::physicstrigger(pl, local, -1, 0);
@@ -1980,7 +1980,7 @@ void moveplayer(physent *pl, int moveres, bool local)
     }
 
     if(local) pl->o = pl->newpos;
-    loopi(physsteps-1) moveplayer(pl, moveres, local, physframetime);
+    for(int i = 0; i < int(physsteps-1); ++i) moveplayer(pl, moveres, local, physframetime);
     if(local) pl->deltapos = pl->o;
     moveplayer(pl, moveres, local, physframetime);
     if(local)
@@ -2001,7 +2001,7 @@ bool bounce(physent *d, float elasticity, float waterfric, float grav)
 
     d->o = d->newpos;
     bool hitplayer = false;
-    loopi(physsteps-1)
+    for(int i = 0; i < int(physsteps-1); ++i)
     {
         if(bounce(d, physframetime/1000.0f, elasticity, waterfric, grav)) hitplayer = true;
     }
@@ -2237,7 +2237,7 @@ bool entinmap(dynent *d, bool avoidplayers)        // brute force but effective 
 {
     d->o.z += d->eyeheight; // pos specified is at feet
     vec orig = d->o;
-    loopi(100)              // try max 100 times
+    for(int i = 0; i < 100; ++i)              // try max 100 times
     {
         if(i)
         {

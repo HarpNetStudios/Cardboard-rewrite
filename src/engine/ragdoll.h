@@ -12,7 +12,7 @@ struct ragdollskel
 
         bool shareverts(const tri &t) const
         {
-            loopi(3) loopj(3) if(vert[i] == t.vert[j]) return true;
+            for(int i = 0; i < 3; ++i) for(int j = 0; j < 3; ++j) if(vert[i] == t.vert[j]) return true;
             return false;
         }
     };
@@ -68,7 +68,7 @@ struct ragdollskel
             joint &j = joints[i];
             j.weight = 0;
             vec pos(0, 0, 0);
-            loopk(3) if(j.vert[k]>=0)
+            for(int k = 0; k < 3; ++k) if(j.vert[k]>=0)
             {
                 pos.add(verts[j.vert[k]].pos);
                 j.weight++;
@@ -170,7 +170,7 @@ struct ragdolldata
         if(!animjoints) return;
         ragdollskel::joint &j = skel->joints[i];
         vec pos(0, 0, 0);
-        loopk(3) if(j.vert[k]>=0) pos.add(verts[j.vert[k]].pos);
+        for(int k = 0; k < 3; ++k) if(j.vert[k]>=0) pos.add(verts[j.vert[k]].pos);
         pos.mul(j.weight);
 
         ragdollskel::tri &t = skel->tris[j.tri];
@@ -423,7 +423,7 @@ VAR(ragdollconstrain, 1, 5, 100);
 
 void ragdolldata::constrain()
 {
-    loopi(ragdollconstrain)
+    for(int i = 0; i < int(ragdollconstrain); ++i)
     {
         constraindist();
         updatepos();

@@ -73,11 +73,14 @@ namespace entities
 
     void preloadentities()
     {
-        loopi(MAXENTTYPES)
+        for(int i = 0; i < int(MAXENTTYPES); ++i)
         {
             switch(i)
             {
                 case I_AMMO: case I_HEALTH:
+                    break;
+                case RACE_START: case RACE_FINISH: case RACE_CHECKPOINT:
+                    if (!m_race) continue;
                     break;
             }
             const char *mdl = entmdlname(i);
@@ -125,8 +128,8 @@ namespace entities
     void addammo(int *v, bool local)
     {
         itemstat &is = itemstats[I_AMMO];
-		loopi(6) v[i+1] += guns[i+1].ammoadd;
-		loopi(6) if(v[i+1]>is.max) v[i+1] = guns[i+1].ammomax;
+		for(int i = 0; i < 6; ++i) v[i+1] += guns[i+1].ammoadd;
+		for(int i = 0; i < 6; ++i) if(v[i+1]>is.max) v[i+1] = guns[i+1].ammomax;
         if(local) msgsound(is.sound);
     }
 
@@ -256,6 +259,33 @@ namespace entities
                 }
                 break;
 
+            case RACE_FINISH:
+                if (m_race) {
+                    addmsg(N_RACEFINISH, "rc", d);
+                }
+                d->lastpickup = ents[n]->type;
+                d->lastpickupindex = n;
+                d->lastpickupmillis = lastmillis;
+                break;
+
+            case RACE_START:
+                if (m_race) {
+                    addmsg(N_RACESTART, "rc", d);
+                }
+                d->lastpickup = ents[n]->type;
+                d->lastpickupindex = n;
+                d->lastpickupmillis = lastmillis;
+                break;
+
+            case RACE_CHECKPOINT:
+                if (m_race) {
+                    addmsg(N_RACECHECKPOINT, "rci", d, ents[n]->attr2);
+                }
+                d->lastpickup = ents[n]->type;
+                d->lastpickupindex = n;
+                d->lastpickupmillis = lastmillis;
+                break;
+
             case TELEPORT:
             {
                 if(d->lastpickup==e->type && lastmillis-d->lastpickupmillis<500) break;
@@ -295,7 +325,7 @@ namespace entities
         {
             extentity &e = *ents[i];
             if(e.type==NOTUSED) continue;
-            if((!e.spawned() || e.nopickup()) && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
+            if((!e.spawned() || e.nopickup()) && e.type!=TELEPORT && e.type!=JUMPPAD && (m_race && e.type!=RACE_START && e.type!=RACE_FINISH && e.type!=RACE_CHECKPOINT) ) continue;
             float dist = e.o.dist(o);
             if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
         }
@@ -554,11 +584,18 @@ namespace entities
             case FLAG:
             case TELEDEST:
                 e.attr3 = e.attr2;
+            case RACE_START:
+            case RACE_FINISH:
+            case RACE_CHECKPOINT:
+                e.attr2 = e.attr1;
+                break;
         }
     }
 
     void entradius(extentity &e, bool color)
     {
+        int maxcheckpoints = 0;
+
         switch(e.type)
         {
             case TELEPORT:
@@ -571,6 +608,46 @@ namespace entities
 
             case JUMPPAD:
                 renderentarrow(e, vec((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f).normalize(), 4);
+                break;
+
+            case RACE_START:
+                loopv(ents) {
+                    // successor
+                    if(ents[i]->type == RACE_CHECKPOINT && ents[i]->attr2 == 1) {
+                        renderentarrow(e, vec(ents[i]->o).sub(e.o).normalize(), e.o.dist(ents[i]->o));
+                    }
+                    // precessor
+                    if(ents[i]->type == RACE_FINISH) {
+                        renderentarrow(*ents[i], vec(e.o).sub(ents[i]->o).normalize(), ents[i]->o.dist(e.o));
+                    }
+                }
+                break;
+
+            case RACE_CHECKPOINT:
+                loopv(ents) {
+                    // successor
+                    if(ents[i]->type == RACE_CHECKPOINT && (e.attr2+1) == ents[i]->attr2) {
+                        renderentarrow(e, vec(ents[i]->o).sub(e.o).normalize(), e.o.dist(ents[i]->o));
+                    }
+                    // precessor
+                    if(ents[i]->type == RACE_CHECKPOINT && (e.attr2-1) == ents[i]->attr2) {
+                        renderentarrow(*ents[i], vec(e.o).sub(ents[i]->o).normalize(), ents[i]->o.dist(e.o));
+                    }
+                }
+                break;
+
+            case RACE_FINISH:
+                loopv(ents) if(ents[i]->type == RACE_CHECKPOINT && ents[i]->attr2 > maxcheckpoints) {
+                    maxcheckpoints = ents[i]->attr2;
+                }
+                // successor
+                loopv(ents) if(ents[i]->type == RACE_START) {
+                    renderentarrow(e, vec(ents[i]->o).sub(e.o).normalize(), e.o.dist(ents[i]->o));
+                }
+                // precessor
+                loopv(ents) if(ents[i]->type == RACE_CHECKPOINT && ents[i]->attr2 == maxcheckpoints) {
+                    renderentarrow(*ents[i], vec(e.o).sub(ents[i]->o).normalize(), ents[i]->o.dist(e.o));
+                }
                 break;
 
             case FLAG:
@@ -598,15 +675,14 @@ namespace entities
         static const char * const entnames[] =
         {
             "none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight",
-            "smg", "shells", "riflerounds", "bullets", "rockets",  "grenades",
-            "health", "healthboost", "placeholder", "placeholder2", "quaddamage",
+            "health", "ammo", "start", "finish", "checkpoint", "placeholder4",
+            "placeholder5", "placeholder6", "placeholder7", "placeholder8", "placeholder9",
             "teleport", "teledest",
-            "placeholder3", "placeholder4", "jumppad",
-            "base", "placeholder5",
-            "box", "barrel",
-            "platform", "elevator",
+            "placeholder10", "placeholder11", "jumppad",
+            "base", "placeholder12",
+            "placeholder13", "placeholder14",
+            "placeholder15", "placeholder16",
             "flag",
-            "", "", "", "",
         };
         return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
     }

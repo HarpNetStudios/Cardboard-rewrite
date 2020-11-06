@@ -159,7 +159,7 @@ void pushgui(menu *m, int pos = -1)
 void restoregui(int pos)
 {
     int clear = guistack.length()-pos-1;
-    loopi(clear) popgui();
+    for(int i = 0; i < int(clear); ++i) popgui();
     menustart = totalmillis;
 }
 
@@ -187,7 +187,7 @@ int cleargui(int n)
         if(!clear) return 1;
     }
     if(n>0) clear = min(clear, n);
-    loopi(clear) popgui(); 
+    for(int i = 0; i < int(clear); ++i) popgui(); 
     if(!guistack.empty()) restoregui(guistack.length()-1);
     return clear;
 }

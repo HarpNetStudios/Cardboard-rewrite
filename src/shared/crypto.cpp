@@ -38,7 +38,7 @@ namespace tiger
         bb = b;
         cc = c;
 
-        loop(pass_no, TIGER_PASSES)
+        for(int pass_no = 0; pass_no < int(TIGER_PASSES); ++pass_no)
         {
             if(pass_no)
             {
@@ -83,16 +83,16 @@ namespace tiger
         chunk state[3] = { 0x0123456789ABCDEFULL, 0xFEDCBA9876543210ULL, 0xF096A5B4C3B2E187ULL };
         uchar temp[64];
 
-        if(!*(const uchar *)&islittleendian) loopj(64) temp[j^7] = str[j];
-        else loopj(64) temp[j] = str[j];
-        loopi(1024) loop(col, 8) ((uchar *)&sboxes[i])[col] = i&0xFF;
+        if(!*(const uchar *)&islittleendian) for(int j = 0; j < 64; ++j) temp[j^7] = str[j];
+        else for(int j = 0; j < 64; ++j) temp[j] = str[j];
+        for(int i = 0; i < 1024; ++i) for(int col = 0; col < 8; ++col) ((uchar *)&sboxes[i])[col] = i&0xFF;
 
         int abc = 2;
-        loop(pass, 5) loopi(256) for(int sb = 0; sb < 1024; sb += 256)
+        for(int pass = 0; pass < 5; ++pass) for(int i = 0; i < 256; ++i) for(int sb = 0; sb < 1024; sb += 256)
         {
             abc++;
             if(abc >= 3) { abc = 0; compress((chunk *)temp, state); }
-            loop(col, 8)
+            for(int col = 0; col < 8; ++col)
             {
                 uchar val = ((uchar *)&sboxes[sb+i])[col];
                 ((uchar *)&sboxes[sb+i])[col] = ((uchar *)&sboxes[sb + ((uchar *)&state[abc])[col]])[col];
@@ -117,7 +117,7 @@ namespace tiger
         {
             if(!*(const uchar *)&islittleendian)
             {
-                loopj(64) temp[j^7] = str[j];
+                for(int j = 0; j < 64; ++j) temp[j^7] = str[j];
                 compress((chunk *)temp, val.chunks);
             }
             else compress((chunk *)str, val.chunks);
@@ -148,10 +148,10 @@ namespace tiger
         compress((chunk *)temp, val.chunks);
         if(!*(const uchar *)&islittleendian)
         {
-            loopk(3) 
+            for(int k = 0; k < 3; ++k)
             {
                 uchar *c = &val.bytes[k*sizeof(chunk)];
-                loopl(sizeof(chunk)/2) swap(c[l], c[sizeof(chunk)-1-l]);
+                for(int l = 0; l < int(sizeof(chunk)/2); ++l) swap(c[l], c[sizeof(chunk)-1-l]);
             }
         }
     }
@@ -182,7 +182,7 @@ template<int BI_DIGITS> struct bigint
         int len = (slen+2*sizeof(ushort)-1)/(2*sizeof(ushort));
         if(len>maxlen) return 0;
         memset(digits, 0, len*sizeof(ushort));
-        loopi(slen)
+        for(int i = 0; i < int(slen); ++i)
         {
             int c = s[slen-i-1];
             if(isalpha(c)) c = toupper(c) - 'A' + 10;
@@ -210,10 +210,10 @@ template<int BI_DIGITS> struct bigint
 
     void printdigits(vector<char> &buf) const
     {
-        loopi(len)
+        for(int i = 0; i < int(len); ++i)
         {
             digit d = digits[len-i-1];
-            loopj(BI_DIGIT_BITS/4)
+            for(int j = 0; j < int(BI_DIGIT_BITS/4); ++j)
             {
                 uint shift = BI_DIGIT_BITS - (j+1)*4;
                 int val = (d >> shift) & 0xF;
@@ -304,10 +304,10 @@ template<int BI_DIGITS> struct bigint
     {
         if(!x.len || !y.len) { len = 0; return *this; }
         memset(digits, 0, y.len*sizeof(digit));
-        loopi(x.len)
+        for(int i = 0; i < int(x.len); ++i)
         {
             dbldigit carry = 0;
-            loopj(y.len)
+            for(int j = 0; j < int(y.len); ++j)
             {
                 carry += (dbldigit)x.digits[i] * (dbldigit)y.digits[j] + (dbldigit)digits[i+j];
                 digits[i+j] = (digit)carry;
@@ -875,7 +875,7 @@ bool hashstring(const char *str, char *result, int maxlen)
     tiger::hashval hv;
     if(maxlen < 2*(int)sizeof(hv.bytes) + 1) return false;
     tiger::hash((uchar *)str, strlen(str), hv);
-    loopi(sizeof(hv.bytes))
+    for(int i = 0; i < int(sizeof(hv.bytes)); ++i)
     {
         uchar c = hv.bytes[i];
         *result++ = "0123456789abcdef"[c&0xF];

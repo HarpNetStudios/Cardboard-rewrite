@@ -84,7 +84,7 @@ static void showglslinfo(GLenum type, GLuint obj, const char *name, const char *
             fprintf(l, "%s\n", log);
             bool partlines = log[0] != '0';
             int line = 0;
-            loopi(numparts)
+            for(int i = 0; i < int(numparts); ++i)
             {
                 const char *part = parts[i];
                 int startline = line;
@@ -116,7 +116,7 @@ static void compileglslshader(GLenum type, GLuint &obj, const char *def, const c
         { 130, "#version 130\n" },
         { 120, "#version 120\n" }
     };
-    loopi(sizeof(glslversions)/sizeof(glslversions[0])) if(glslversion >= glslversions[i].version)
+    for(int i = 0; i < int(sizeof(glslversions)/sizeof(glslversions[0])); ++i) if(glslversion >= glslversions[i].version)
     {
         parts[numparts++] = glslversions[i].header;
         break;
@@ -197,7 +197,7 @@ static void linkglslprogram(Shader &s, bool msg = true)
             glBindAttribLocation_(s.program, a.loc, a.name);
             attribs |= 1<<a.loc;
         }
-        loopi(gle::MAXATTRIBS) if(!(attribs&(1<<i))) glBindAttribLocation_(s.program, i, gle::attribnames[i]);
+        for(int i = 0; i < int(gle::MAXATTRIBS); ++i) if(!(attribs&(1<<i))) glBindAttribLocation_(s.program, i, gle::attribnames[i]);
         if(glversion >= 300)
         {
             glBindFragDataLocation_(s.program, 0, "cube2_FragColor");
@@ -208,7 +208,7 @@ static void linkglslprogram(Shader &s, bool msg = true)
     if(success)
     {
         glUseProgram_(s.program);
-        loopi(8)
+        for(int i = 0; i < 8; ++i)
         {
             static const char * const texnames[8] = { "tex0", "tex1", "tex2", "tex3", "tex4", "tex5", "tex6", "tex7" };
             GLint loc = glGetUniformLocation_(s.program, texnames[i]);
@@ -324,7 +324,7 @@ static void allocglslactiveuniforms(Shader &s)
     GLint numactive = 0;
     glGetProgramiv_(s.program, GL_ACTIVE_UNIFORMS, &numactive);
     oldstring name;
-    loopi(numactive)
+    for(int i = 0; i < int(numactive); ++i)
     {
         GLsizei namelen = 0;
         GLint size = 0;
@@ -536,7 +536,7 @@ void Shader::cleanup(bool invalid)
         attriblocs.setsize(0);
         uniformlocs.setsize(0);
         altshader = NULL;
-        loopi(MAXSHADERDETAIL) fastshader[i] = this;
+        for(int i = 0; i < int(MAXSHADERDETAIL); ++i) fastshader[i] = this;
         reusevs = reuseps = NULL;
     }
     else loopv(defaultparams) defaultparams[i].loc = -1;
@@ -799,7 +799,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
     if(psmain > pspragma) psmain = ps;
 
     vector<char> vsdl, psdl;
-    loopi(MAXDYNLIGHTS)
+    for(int i = 0; i < int(MAXDYNLIGHTS); ++i)
     {
         vsdl.setsize(0);
         psdl.setsize(0);
@@ -812,7 +812,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
         defformatstring(color, "uniform vec3 dynlightcolor[%d];\n", i+1);
         psdl.put(color, strlen(color));
 
-        loopk(min(i+1, numlights))
+        for(int k = 0; k < int(min(i+1, numlights)); ++k)
         {
             defformatstring(dir, "%sdynlight%ddir%s", !k ? "varying vec3 " : " ", k, k==i || k+1==numlights ? ";\n" : ",");
             vsdl.put(dir, strlen(dir));
@@ -822,7 +822,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
         vsdl.put(vsmain, vspragma-vsmain);
         psdl.put(psmain, pspragma-psmain);
 
-        loopk(i+1)
+        for(int k = 0; k < int(i+1); ++k)
         {
             defformatstring(tc, 
                 k<numlights ? 
@@ -1215,7 +1215,7 @@ void fastshader(char *nice, char *fast, int *detail)
 {
     Shader *ns = shaders.access(nice), *fs = shaders.access(fast);
     if(!ns || !fs) return;
-    loopi(min(*detail+1, MAXSHADERDETAIL)) ns->fastshader[i] = fs;
+    for (int i = 0; i < int(min(*detail+1, MAXSHADERDETAIL)); ++i) ns->fastshader[i] = fs;
     ns->fixdetailshader(false);
 }
 
@@ -1327,7 +1327,7 @@ void renderpostfx()
     }
 
     int binds[NUMPOSTFXBINDS];
-    loopi(NUMPOSTFXBINDS) binds[i] = -1;
+    for (int i = 0; i < int(NUMPOSTFXBINDS); ++i) binds[i] = -1;
     loopv(postfxtexs) postfxtexs[i].used = -1;
 
     binds[0] = allocatepostfxtex(0);
@@ -1364,7 +1364,7 @@ void renderpostfx()
         p.shader->set();
         LOCALPARAM(params, p.params);
         int tw = w, th = h, tmu = 0;
-        loopj(NUMPOSTFXBINDS) if(p.inputs&(1<<j) && binds[j] >= 0)
+        for(int j = 0; j < int(NUMPOSTFXBINDS); ++j) if(p.inputs&(1<<j) && binds[j] >= 0)
         {
             if(!tmu)
             {
@@ -1379,7 +1379,7 @@ void renderpostfx()
         LOCALPARAMF(postfxscale, 1.0f/tw, 1.0f/th);
         screenquad(1, 1);
 
-        loopj(NUMPOSTFXBINDS) if(p.freeinputs&(1<<j) && binds[j] >= 0)
+        for(int j = 0; j < int(NUMPOSTFXBINDS); ++j) if(p.freeinputs&(1<<j) && binds[j] >= 0)
         {
             postfxtexs[binds[j]].used = -1;
             binds[j] = -1;
@@ -1489,7 +1489,7 @@ void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
     offsets[0] = 0;
     // rely on bilinear filtering to sample 2 pixels at once
     // transforms a*X + b*Y into (u+v)*[X*u/(u+v) + Y*(1 - u/(u+v))]
-    loopi(radius)
+    for(int i = 0; i < int(radius); ++i)
     {
         float weight1 = exp(-((2*i)*(2*i)) / (2*sigma*sigma)) / sigma,
               weight2 = exp(-((2*i+1)*(2*i+1)) / (2*sigma*sigma)) / sigma,
@@ -1499,7 +1499,7 @@ void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
         offsets[i+1] = offset;
         total += 2*scale;
     }
-    loopi(radius+1) weights[i] /= total;
+    for(int i = 0; i < int(radius+1); ++i) weights[i] /= total;
     for(int i = radius+1; i <= MAXBLURRADIUS; i++) weights[i] = offsets[i] = 0;
 }
 
@@ -1516,7 +1516,7 @@ void setblurshader(int pass, int size, int radius, float *weights, float *offset
     s->set();
     LOCALPARAMV(weights, weights, 8);
     float scaledoffsets[8];
-    loopk(8) scaledoffsets[k] = offsets[k]/size;
+    for(int k = 0; k < 8; ++k) scaledoffsets[k] = offsets[k]/size;
     LOCALPARAMV(offsets, scaledoffsets, 8);
 }
 

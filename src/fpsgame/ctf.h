@@ -103,7 +103,7 @@ struct ctfclientmode : clientmode
     {
         holdspawns.shrink(0);
         flags.shrink(0);
-        loopk(2) scores[k] = 0;
+        for(int k = 0; k < 2; ++k) scores[k] = 0;
     }
 
 #ifdef SERVMODE
@@ -249,7 +249,7 @@ struct ctfclientmode : clientmode
 
     void getteamscores(vector<teamscore> &tscores)
     {
-        loopk(2) if(scores[k]) tscores.add(teamscore(ctfflagteam(k+1), scores[k]));
+        for(int k = 0; k < 2; ++k) if(scores[k]) tscores.add(teamscore(ctfflagteam(k+1), scores[k]));
     }
 
     bool insidebase(const flag &f, const vec &o)
@@ -371,7 +371,7 @@ struct ctfclientmode : clientmode
     {
         if(holdspawns.empty()) return;
         int spawnindex = flags[i].spawnindex;
-        loopj(4)
+        for(int j = 0; j < 4; ++j)
         {
             spawnindex = rnd(holdspawns.length());
             if(spawnindex != flags[i].spawnindex) break;
@@ -449,7 +449,7 @@ struct ctfclientmode : clientmode
     void initclient(clientinfo *ci, packetbuf &p, bool connecting)
     {
         putint(p, N_INITFLAGS);
-        loopk(2) putint(p, scores[k]);
+        for(int k = 0; k < 2; ++k) putint(p, scores[k]);
         putint(p, flags.length());
         loopv(flags)
         {
@@ -483,11 +483,11 @@ struct ctfclientmode : clientmode
     void parseflags(ucharbuf &p, bool commit)
     {
         int numflags = getint(p);
-        loopi(numflags)
+        for(int i = 0; i < int(numflags); ++i)
         {
             int team = getint(p);
             vec o;
-            loopk(3) o[k] = max(getint(p)/DMF, 0.0f);
+            for(int k = 0; k < 3; ++k) o[k] = max(getint(p)/DMF, 0.0f);
             if(p.overread()) break;
             if(commit && notgotflags)
             {
@@ -512,7 +512,7 @@ struct ctfclientmode : clientmode
             preloadmodel("flags/blue");
         }
         static const int sounds[] = { S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET, S_FLAGFAIL };
-        loopi(sizeof(sounds)/sizeof(sounds[0])) preloadsound(sounds[i]);
+        for(int i = 0; i < int(sizeof(sounds)/sizeof(sounds[0])); ++i) preloadsound(sounds[i]);
     }
 
     void drawblip(fpsent *d, float x, float y, float s, const vec &pos, bool flagblip)
@@ -751,7 +751,7 @@ struct ctfclientmode : clientmode
             {
                 holdspawn &h = holdspawns[i];
                 putint(p, -1);
-                loopk(3) putint(p, int(h.o[k]*DMF));
+                for(int k = 0; k < 3; ++k) putint(p, int(h.o[k]*DMF));
             }
         }
         else
@@ -761,27 +761,27 @@ struct ctfclientmode : clientmode
             {
                 flag &f = flags[i];
                 putint(p, f.team);
-                loopk(3) putint(p, int(f.spawnloc[k]*DMF));
+                for(int k = 0; k < 3; ++k) putint(p, int(f.spawnloc[k]*DMF));
             }
         }
     }
 
     void parseflags(ucharbuf &p, bool commit)
     {
-        loopk(2)
+        for(int k = 0; k < 2; ++k)
         {
             int score = getint(p);
             if(commit) scores[k] = score;
         }
         int numflags = getint(p);
-        loopi(numflags)
+        for(int i = 0; i < int(numflags); ++i)
         {
             int version = getint(p), spawn = getint(p), owner = getint(p), invis = getint(p), dropped = 0, holdteam = -1, holdtime = 0;
             vec droploc(0, 0, 0);
             if(owner<0)
             {
                 dropped = getint(p);
-                if(dropped) loopk(3) droploc[k] = getint(p)/DMF;
+                if(dropped) for(int k = 0; k < 3; ++k) droploc[k] = getint(p)/DMF;
             }
             if(m_hold)
             {
@@ -1057,7 +1057,7 @@ struct ctfclientmode : clientmode
 	    if(m_protect || m_hold)
 	    {
             static vector<ai::interest> interests;
-	        loopk(2)
+	        for(int k = 0; k < 2; ++k)
 	        {
                 interests.setsize(0);
                 ai::assist(d, b, interests, k != 0);
@@ -1067,7 +1067,7 @@ struct ctfclientmode : clientmode
 	    else
 	    {
             vec pos = d->feetpos();
-            loopk(2)
+            for(int k = 0; k < 2; ++k)
             {
                 int goal = -1;
                 loopv(flags)
@@ -1128,7 +1128,7 @@ struct ctfclientmode : clientmode
 				bool home = !m_hold && f.team == ctfteamflag(d->team);
 				ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 				fpsent *e = NULL;
-				loopi(numdynents()) if((e = (fpsent *)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && isteam(d->team, e->team))
+				for(int i = 0; i < int(numdynents()); ++i) if((e = (fpsent *)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && isteam(d->team, e->team))
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (FLAGRADIUS*FLAGRADIUS*4) || f.owner == e))
@@ -1208,7 +1208,7 @@ struct ctfclientmode : clientmode
 				targets.setsize(0);
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 				fpsent *e = NULL;
-				loopi(numdynents()) if((e = (fpsent *)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && isteam(d->team, e->team))
+				for(int i = 0; i < int(numdynents()); ++i) if((e = (fpsent *)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && isteam(d->team, e->team))
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (FLAGRADIUS*FLAGRADIUS*4) || f.owner == e))
@@ -1303,7 +1303,7 @@ case N_DROPFLAG:
 {
     int ocn = getint(p), flag = getint(p), version = getint(p);
     vec droploc;
-    loopk(3) droploc[k] = getint(p)/DMF;
+    for(int k = 0; k < 3; ++k) droploc[k] = getint(p)/DMF;
     fpsent *o = ocn==player1->clientnum ? player1 : newclient(ocn);
     if(o && m_ctf) ctfmode.dropflag(o, flag, version, droploc);
     break;

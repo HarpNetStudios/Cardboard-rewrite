@@ -6,7 +6,7 @@ void validmapname(char *dst, const char *src, const char *prefix = NULL, const c
 {
     if(prefix) while(*prefix) *dst++ = *prefix++;
     const char *start = dst;
-    if(src) loopi(maxlen)
+    if(src) for(int i = 0; i < int(maxlen); ++i)
     {
         char c = *src++;
         if(iscubealnum(c) || c == '_' || c == '-' || c == '/' || c == '\\') *dst++ = c;
@@ -97,7 +97,7 @@ bool loadents(const char *fname, vector<entity> &ents, uint *crc)
         else lilswap(&hdr.numvslots, 1);
     }
 
-    loopi(hdr.numvars)
+    for(int i = 0; i < int(hdr.numvars); ++i)
     {
         int type = f->getchar(), ilen = f->getlil<ushort>();
         f->seek(ilen, SEEK_CUR);
@@ -140,7 +140,7 @@ bool loadents(const char *fname, vector<entity> &ents, uint *crc)
         f->seek(nummru*sizeof(ushort), SEEK_CUR);
     }
 
-    loopi(min(hdr.numents, MAXENTS))
+    for(int i = 0; i < int(min(hdr.numents, MAXENTS)); ++i)
     {
         entity &e = ents.add();
         f->read(&e, sizeof(entity));
@@ -223,7 +223,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
 {
     if((savemapprogress++&0xFFF)==0) renderprogress(float(savemapprogress)/allocnodes, "saving octree...");
 
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         ivec co(i, o, size);
         if(c[i].children)
@@ -241,7 +241,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                 if(!nolms)
                 {
                     if(c[i].merged) oflags |= 0x80;
-                    if(c[i].ext) loopj(6)
+                    if(c[i].ext) for(int j = 0; j < 6; ++j)
                     {
                         const surfaceinfo &surf = c[i].ext->surfaces[j];
                         if(!surf.used()) continue;
@@ -259,7 +259,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                 }
             }
 
-            loopj(6) f->putlil<ushort>(c[i].texture[j]);
+            for(int j = 0; j < 6; ++j) f->putlil<ushort>(c[i].texture[j]);
 
             if(oflags&0x40) f->putlil<ushort>(c[i].material);
             if(oflags&0x80) f->putchar(c[i].merged);
@@ -267,7 +267,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
             {
                 f->putchar(surfmask);
                 f->putchar(totalverts);
-                loopj(6) if(surfmask&(1<<j))
+                for(int j = 0; j < 6; ++j) if(surfmask&(1<<j))
                 {
                     surfaceinfo surf = c[i].ext->surfaces[j];
                     vertinfo *verts = c[i].ext->verts() + surf.verts;
@@ -282,7 +282,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                             if(layerverts == 4)
                             {
                                 ivec v[4] = { verts[0].getxyz(), verts[1].getxyz(), verts[2].getxyz(), verts[3].getxyz() };
-                                loopk(4)
+                                for(int k = 0; k < 4; ++k)
                                 {
                                     const ivec &v0 = v[k], &v1 = v[(k+1)&3], &v2 = v[(k+2)&3], &v3 = v[(k+3)&3];
                                     if(v1[vc] == v0[vc] && v1[vr] == v2[vr] && v3[vc] == v2[vc] && v3[vr] == v0[vr])
@@ -301,7 +301,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                             if(layerverts < 4 && vis&2) vertmask |= 0x02;
                         }
                         bool matchnorm = true;
-                        loopk(numverts)
+                        for(int k = 0; k < int(numverts); ++k)
                         {
                             const vertinfo &v = verts[k];
                             if(v.u || v.v) vertmask |= 0x40;
@@ -310,7 +310,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                         if(matchnorm) vertmask |= 0x08;
                         if(vertmask&0x40 && layerverts == 4)
                         {
-                            loopk(4)
+                            for(int k = 0; k < 4; ++k)
                             {
                                 const vertinfo &v0 = verts[k], &v1 = verts[(k+1)&3], &v2 = verts[(k+2)&3], &v3 = verts[(k+3)&3];
                                 if(v1.u == v0.u && v1.v == v2.v && v3.u == v2.u && v3.v == v0.v)
@@ -355,7 +355,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                         }
                     }
                     if(hasnorm && vertmask&0x08) { f->putlil<ushort>(verts[0].norm); hasnorm = false; }
-                    if(hasxyz || hasuv || hasnorm) loopk(layerverts)
+                    if(hasxyz || hasuv || hasnorm) for(int k = 0; k < int(layerverts); ++k)
                     {
                         const vertinfo &v = verts[(k+vertorder)%layerverts];
                         if(hasxyz)
@@ -366,7 +366,7 @@ void savec(cube *c, const ivec &o, int size, stream *f, bool nolms)
                         if(hasuv) { f->putlil<ushort>(v.u); f->putlil<ushort>(v.v); }
                         if(hasnorm) f->putlil<ushort>(v.norm);
                     }
-                    if(surf.numverts&LAYER_DUP) loopk(layerverts)
+                    if(surf.numverts&LAYER_DUP) for(int k = 0; k < int(layerverts); ++k)
                     {
                         const vertinfo &v = verts[layerverts + (k+vertorder)%layerverts];
                         if(hasuv) { f->putlil<ushort>(v.u); f->putlil<ushort>(v.v); }
@@ -403,7 +403,7 @@ void convertoldsurfaces(cube &c, const ivec &co, int size, surfacecompat *srcsur
     vertinfo verts[6*2*MAXFACEVERTS];
     int totalverts = 0, numsurfs = 6;
     memset(dstsurfs, 0, sizeof(dstsurfs));
-    loopi(6) if((hassurfs|hasnorms|hasmerges)&(1<<i))
+    for(int i = 0; i < 6; ++i) if((hassurfs|hasnorms|hasmerges)&(1<<i))
     {
         surfaceinfo &dst = dstsurfs[i];
         vertinfo *curverts = NULL;
@@ -438,7 +438,7 @@ void convertoldsurfaces(cube &c, const ivec &co, int size, surfacecompat *srcsur
                 const mergecompat &m = merges[i];
                 int offset = -n.dot(v[0].mul(size).add(vo)),
                     dim = dimension(i), vc = C[dim], vr = R[dim];
-                loopk(4)
+                for(int k = 0; k < 4; ++k)
                 {
                     const ivec &coords = facecoords[i][k];
                     int cc = coords[vc] ? m.u2 : m.u1,
@@ -465,7 +465,7 @@ void convertoldsurfaces(cube &c, const ivec &co, int size, surfacecompat *srcsur
                 pos[3] = vis&2 ? v[(order+3)&3].mul(size).add(vo) : pos[0];
             }
             curverts = verts + totalverts;
-            loopk(4)
+            for(int k = 0; k < 4; ++k)
             {
                 if(k > 0 && (pos[k] == pos[0] || pos[k] == pos[k-1])) continue;
                 vertinfo &dv = curverts[numverts++];
@@ -483,7 +483,7 @@ void convertoldsurfaces(cube &c, const ivec &co, int size, surfacecompat *srcsur
             dst.verts = totalverts;
             dst.numverts |= numverts;
             totalverts += numverts;
-            if(dst.numverts&LAYER_DUP) loopk(4)
+            if(dst.numverts&LAYER_DUP) for(int k = 0; k < 4; ++k)
             {
                 if(k > 0 && (pos[k] == pos[0] || pos[k] == pos[k-1])) continue;
                 vertinfo &bv = verts[totalverts++];
@@ -518,7 +518,7 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
         case OCTSAV_NORMAL: f->read(c.edges, 12); break;
         default: failed = true; return;
     }
-    loopi(6) c.texture[i] = mapversion<14 ? f->getchar() : f->getlil<ushort>();
+    for(int i = 0; i < 6; ++i) c.texture[i] = mapversion<14 ? f->getchar() : f->getlil<ushort>();
     if(mapversion < 7) f->seek(3, SEEK_CUR);
     else if(mapversion <= 31)
     {
@@ -540,7 +540,7 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
         if(mask & 0x3F)
         {
             int numsurfs = 6;
-            loopi(numsurfs)
+            for(int i = 0; i < int(numsurfs); ++i)
             {
                 if(i >= 6 || mask & (1 << i))
                 {
@@ -591,7 +591,7 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
                     if(mask)
                     {
                         hasmerges = mask&0x3F;
-                        loopi(6) if(mask&(1<<i))
+                        for(int i = 0; i < 6; ++i) if(mask&(1<<i))
                         {
                             mergecompat *m = &merges[i];
                             f->read(m, sizeof(mergecompat));
@@ -633,7 +633,7 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
             memset(c.ext->surfaces, 0, sizeof(c.ext->surfaces));
             memset(c.ext->verts(), 0, totalverts*sizeof(vertinfo));
             int offset = 0;
-            loopi(6) if(surfmask&(1<<i))
+            for(int i = 0; i < 6; ++i) if(surfmask&(1<<i))
             {
                 surfaceinfo &surf = c.ext->surfaces[i];
                 f->read(&surf, sizeof(surfaceinfo));
@@ -699,10 +699,10 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
                 if(hasnorm && vertmask&0x08)
                 {
                     ushort norm = f->getlil<ushort>();
-                    loopk(layerverts) verts[k].norm = norm;
+                    for(int k = 0; k < int(layerverts); ++k) verts[k].norm = norm;
                     hasnorm = false;
                 }
-                if(hasxyz || hasuv || hasnorm) loopk(layerverts)
+                if(hasxyz || hasuv || hasnorm) for(int k = 0; k < int(layerverts); ++k)
                 {
                     vertinfo &v = verts[k];
                     if(hasxyz)
@@ -715,7 +715,7 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
                     if(hasuv) { v.u = f->getlil<ushort>(); v.v = f->getlil<ushort>(); }
                     if(hasnorm) v.norm = f->getlil<ushort>();
                 }
-                if(surf.numverts&LAYER_DUP) loopk(layerverts)
+                if(surf.numverts&LAYER_DUP) for(int k = 0; k < int(layerverts); ++k)
                 {
                     vertinfo &v = verts[k+layerverts], &t = verts[k];
                     v.setxyz(t.x, t.y, t.z);
@@ -732,7 +732,7 @@ void loadc(stream *f, cube &c, const ivec &co, int size, bool &failed)
 cube *loadchildren(stream *f, const ivec &co, int size, bool &failed)
 {
     cube *c = newcubes();
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         loadc(f, c[i], ivec(i, co, size), size, failed);
         if(failed) break;
@@ -760,7 +760,7 @@ void saveslotconfig(stream* h, Slot& s, int index)
 			h->printf("set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
 			if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) h->printf(" \"%s\"", s.params[j].name);
 			else h->printf(" %d", s.params[j].index);
-			loopk(4) h->printf(" %f", s.params[j].val[k]);
+			for(int k = 0; k < 4; ++k) h->printf(" %f", s.params[j].val[k]);
 			h->printf("\n");
 		}
 		*/
@@ -867,7 +867,7 @@ void savevslot(stream *f, VSlot &vs, int prev)
             SlotShaderParam &p = vs.params[i];
             f->putlil<ushort>(strlen(p.name));
             f->write(p.name, strlen(p.name));
-            loopk(4) f->putlil<float>(p.val[k]);
+            for(int k = 0; k < 4; ++k) f->putlil<float>(p.val[k]);
         }
     }
     if(vs.changed & (1<<VSLOT_SCALE)) f->putlil<float>(vs.scale);
@@ -890,7 +890,7 @@ void savevslot(stream *f, VSlot &vs, int prev)
     }
     if(vs.changed & (1<<VSLOT_COLOR))
     {
-        loopk(3) f->putlil<float>(vs.colorscale[k]);
+        for(int k = 0; k < 3; ++k) f->putlil<float>(vs.colorscale[k]);
     }
 }
 
@@ -899,7 +899,7 @@ void savevslots(stream *f, int numvslots)
     if(vslots.empty()) return;
     int *prev = new int[numvslots];
     memset(prev, -1, numvslots*sizeof(int));
-    loopi(numvslots)
+    for(int i = 0; i < int(numvslots); ++i)
     {
         VSlot *vs = vslots[i];
         if(vs->changed) continue;
@@ -912,7 +912,7 @@ void savevslots(stream *f, int numvslots)
         }
     }
     int lastroot = 0;
-    loopi(numvslots)
+    for(int i = 0; i < int(numvslots); ++i)
     {
         VSlot &vs = *vslots[i];
         if(!vs.changed) continue;
@@ -931,7 +931,7 @@ void loadvslot(stream *f, VSlot &vs, int changed)
     {
         int numparams = f->getlil<ushort>();
         oldstring name;
-        loopi(numparams)
+        for(int i = 0; i < int(numparams); ++i)
         {
             SlotShaderParam &p = vs.params.add();
             int nlen = f->getlil<ushort>();
@@ -940,7 +940,7 @@ void loadvslot(stream *f, VSlot &vs, int changed)
             if(nlen >= MAXSTRLEN) f->seek(nlen - (MAXSTRLEN-1), SEEK_CUR);
             p.name = getshaderparamname(name);
             p.loc = -1;
-            loopk(4) p.val[k] = f->getlil<float>();
+            for(int k = 0; k < 4; ++k) p.val[k] = f->getlil<float>();
         }
     }
     if(vs.changed & (1<<VSLOT_SCALE)) vs.scale = f->getlil<float>();
@@ -963,7 +963,7 @@ void loadvslot(stream *f, VSlot &vs, int changed)
     }
     if(vs.changed & (1<<VSLOT_COLOR))
     {
-        loopk(3) vs.colorscale[k] = f->getlil<float>();
+        for(int k = 0; k < 3; ++k) vs.colorscale[k] = f->getlil<float>();
     }
 }
 
@@ -977,7 +977,7 @@ void loadvslots(stream *f, int numvslots)
         int changed = f->getlil<int>();
         if(changed < 0)
         {
-            loopi(-changed) vslots.add(new VSlot(NULL, vslots.length()));
+            for(int i = 0; i < int(-changed); ++i) vslots.add(new VSlot(NULL, vslots.length()));
             numvslots += changed;
         }
         else
@@ -1198,7 +1198,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 
     renderprogress(0, "loading vars...");
 
-    loopi(hdr.numvars)
+    for(int i = 0; i < int(hdr.numvars); ++i)
     {
         int type = f->getchar(), ilen = f->getlil<ushort>();
         oldstring name;
@@ -1268,12 +1268,12 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     {
         uchar oldtl[256];
         f->read(oldtl, sizeof(oldtl));
-        loopi(256) texmru.add(oldtl[i]);
+        for(int i = 0; i < 256; ++i) texmru.add(oldtl[i]);
     }
     else
     {
         ushort nummru = f->getlil<ushort>();
-        loopi(nummru) texmru.add(f->getlil<ushort>());
+        for(int i = 0; i < int(nummru); ++i) texmru.add(f->getlil<ushort>());
     }
 
     renderprogress(0, "loading entities...");
@@ -1281,7 +1281,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     vector<extentity *> &ents = entities::getents();
     int einfosize = entities::extraentinfosize();
     char *ebuf = einfosize > 0 ? new char[einfosize] : NULL;
-    loopi(min(hdr.numents, MAXENTS))
+    for(int i = 0; i < int(min(hdr.numents, MAXENTS)); ++i)
     {
         extentity &e = *entities::newentity();
         ents.add(&e);
@@ -1338,8 +1338,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 
     if(!failed)
     {
-		if(cube2==0 || cube2==2) {
-			if(hdr.version >= 7) loopi(hdr.lightmaps)
+		if(!cube2) {
+			if(hdr.version >= 7) for(int i = 0; i < int(hdr.lightmaps); ++i)
 			{
 				renderprogress(i/(float)hdr.lightmaps, "loading lightmaps...");
 				LightMap &lm = lightmaps.add();
@@ -1432,12 +1432,12 @@ void writeobj(char *name)
         vertex *vdata = NULL;
         if(!readva(&va, edata, vdata)) continue;
         ushort *idx = edata;
-        loopj(va.texs)
+        for(int j = 0; j < int(va.texs); ++j)
         {
             elementset &es = va.eslist[j];
             if(usedmtl.find(es.texture) < 0) usedmtl.add(es.texture);
             vector<ivec2> &keys = mtls[es.texture];
-            loopk(es.length[1])
+            for(int k = 0; k < int(es.length[1]); ++k)
             {
                 int n = idx[k] - va.voffset;
                 const vertex &v = vdata[n];
@@ -1448,7 +1448,7 @@ void writeobj(char *name)
                 if(key.x == verts.length())
                 {
                     verts.add(pos);
-                    loopl(3)
+                    for(int l = 0; l < 3; ++l)
                     {
                         bbmin[l] = min(bbmin[l], pos[l]);
                         bbmax[l] = max(bbmax[l], pos[l]);
@@ -1489,7 +1489,7 @@ void writeobj(char *name)
         for(int i = 0; i < keys.length(); i += 3)
         {
             f->printf("f");
-            loopk(3) f->printf(" %d/%d", keys[i+2-k].x+1, keys[i+2-k].y+1);
+            for(int k = 0; k < 3; ++k) f->printf(" %d/%d", keys[i+2-k].x+1, keys[i+2-k].y+1);
             f->printf("\n");
         }
         f->printf("\n");

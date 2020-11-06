@@ -114,7 +114,7 @@ VARFR(sunlightpitch, -90, 90, 90, setsunlightdir());
 void setsunlightdir() 
 { 
     sunlightdir = vec(sunlightyaw*RAD, sunlightpitch*RAD); 
-    loopk(3) if(fabs(sunlightdir[k]) < 1e-5f) sunlightdir[k] = 0;
+    for(int k = 0; k < 3; ++k) if(fabs(sunlightdir[k]) < 1e-5f) sunlightdir[k] = 0;
     sunlightdir.normalize();
     setupsunlight(); 
 }
@@ -165,7 +165,7 @@ void setsurface(cube &c, int orient, const surfaceinfo &src, const vertinfo *src
     else
     {
         int numbefore = 0, beforeoffset = 0;
-        loopi(orient)
+        for(int i = 0; i < int(orient); ++i)
         {
             surfaceinfo &surf = c.ext->surfaces[i];
             int numverts = surf.totalverts();
@@ -197,7 +197,7 @@ void setsurface(cube &c, int orient, const surfaceinfo &src, const vertinfo *src
                 if(numbefore && c.ext != ext) memcpy(ext->verts(), c.ext->verts(), numbefore*sizeof(vertinfo));
                 offset = numbefore;
             }
-            else loopi(orient)
+            else for(int i = 0; i < int(orient); ++i)
             {
                 surfaceinfo &surf = ext->surfaces[i];
                 int numverts = surf.totalverts();
@@ -330,7 +330,7 @@ bool LightMap::insert(ushort &tx, ushort &ty, uchar *src, ushort tw, ushort th)
 void LightMap::copy(ushort tx, ushort ty, uchar *src, ushort tw, ushort th)
 {
     uchar *dst = data + bpp * tx + ty * bpp * LM_PACKW;
-    loopi(th)
+    for(int i = 0; i < int(th); ++i)
     {
         memcpy(dst, src, bpp * tw);
         dst += bpp * LM_PACKW;
@@ -416,7 +416,7 @@ static inline bool htcmp(const lightmapinfo &k, const layoutinfo &v)
     if(ktype != vlm.type) return false;
     int kbpp = k.bpp;
     const uchar *kcolor = k.colorbuf, *vcolor = vlm.data + kbpp*(v.x + v.y*LM_PACKW);
-    loopi(kh)
+    for(int i = 0; i < int(kh); ++i)
     {
         if(memcmp(kcolor, vcolor, kbpp*kw)) return false;
         kcolor += kbpp*kw;
@@ -424,7 +424,7 @@ static inline bool htcmp(const lightmapinfo &k, const layoutinfo &v)
     }
     if((ktype&LM_TYPE) != LM_BUMPMAP0) return true;
     const bvec *kdir = k.raybuf, *vdir = (const bvec *)lightmaps[v.lmid+1 - LMID_RESERVED].data + (v.x + v.y*LM_PACKW);
-    loopi(kh)
+    for(int i = 0; i < int(kh); ++i)
     {
         if(memcmp(kdir, vdir, kw*sizeof(bvec))) return false;
         kdir += kw;
@@ -438,7 +438,7 @@ static inline uint hthash(const lightmapinfo &k)
     int kw = k.w, kh = k.h, kbpp = k.bpp; 
     uint hash = kw + (kh<<8);
     const uchar *color = k.colorbuf;
-    loopi(kw*kh)
+    for(int i = 0; i < int(kw*kh); ++i)
     {
        hash ^= color[0] + (color[1] << 4) + (color[2] << 8);
        color += kbpp;
@@ -660,16 +660,16 @@ static void calcskylight(lightmapworker *w, const vec &o, const vec &normal, flo
     flags |= RAY_SHADOW;
     if(skytexturelight) flags |= RAY_SKIPSKY | (useskytexture ? RAY_SKYTEX : 0);
     int hit = 0;
-    if(w) loopi(17) 
+    if(w) for(int i = 0; i < 17; ++i) 
     {
         if(normal.dot(rays[i])>=0 && shadowray(w->shadowraycache, vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, flags, t)>1e15f) hit++;
     }
-    else loopi(17) 
+    else for(int i = 0; i < 17; ++i) 
     {
         if(normal.dot(rays[i])>=0 && shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, flags, t)>1e15f) hit++;
     }
 
-    loopk(3) skylight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
+    for(int k = 0; k < 3; ++k) skylight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
 }
 
 static inline bool hasskylight()
@@ -743,7 +743,7 @@ static bool generatelightmap(lightmapworker *w, float lpu, const lerpvert *lv, i
     float tolerance = 0.5 / lpu;
     uint lightmask = 0, lightused = 0;
     vec offsets1[8], offsets2[8];
-    loopi(8) 
+    for(int i = 0; i < 8; ++i) 
     {
         offsets1[i] = vec(xstep1).mul(aacoords[i][0]).add(vec(ystep1).mul(aacoords[i][1]));
         offsets2[i] = vec(xstep2).mul(aacoords[i][0]).add(vec(ystep2).mul(aacoords[i][1]));
@@ -780,9 +780,9 @@ static bool generatelightmap(lightmapworker *w, float lpu, const lerpvert *lv, i
             {
                 if((w->type&LM_TYPE)==LM_BUMPMAP0 || !adaptivesample || sample->x<skylightcolor[0] || sample->y<skylightcolor[1] || sample->z<skylightcolor[2])
                     calcskylight(w, u, normal, t, skylight, lmshadows > 1 ? RAY_ALPHAPOLY : 0);
-                else loopk(3) skylight[k] = max(skylightcolor[k], ambientcolor[k]);
+                else for(int k = 0; k < 3; ++k) skylight[k] = max(skylightcolor[k], ambientcolor[k]);
             }
-            else loopk(3) skylight[k] = ambientcolor[k];
+            else for(int k = 0; k < 3; ++k) skylight[k] = ambientcolor[k];
             if(w->type&LM_ALPHA) generatealpha(w, t, u, skylight[3]);
             sample += aasample;
         }
@@ -801,18 +801,18 @@ static bool generatelightmap(lightmapworker *w, float lpu, const lerpvert *lv, i
         {
             vec &center = *sample++;
             if(adaptivesample && x > 0 && x+1 < w->w && y > 0 && y+1 < w->h && !lumelsample(center, aasample, stride))
-                loopi(aasample-1) *sample++ = center;
+                for(int i = 0; i < int(aasample-1); ++i) *sample++ = center;
             else
             {
 #define AA_EDGE_TOLERANCE(x, y, i) EDGE_TOLERANCE(x + aacoords[i][0], y + aacoords[i][1])
                 vec u = x < sidex ? vec(xstep1).mul(x).add(vec(ystep1).mul(y)).add(origin1) : vec(xstep2).mul(x).add(vec(ystep2).mul(y)).add(origin2);
                 const vec *offsets = x < sidex ? offsets1 : offsets2;
                 vec n = vec(normal).normalize();
-                loopi(aasample-1)
+                for(int i = 0; i < int(aasample-1); ++i)
                     generatelumel(w, AA_EDGE_TOLERANCE(x, y, i+1) * tolerance, lightmask, w->lights, vec(u).add(offsets[i+1]), n, *sample++, x, y);
                 if(lmaa == 3) 
                 {
-                    loopi(4)
+                    for(int i = 0; i < 4; ++i)
                     {
                         vec s;
                         generatelumel(w, AA_EDGE_TOLERANCE(x, y, i+4) * tolerance, lightmask, w->lights, vec(u).add(offsets[i+4]), n, s, x, y);
@@ -870,13 +870,13 @@ static int finishlightmap(lightmapworker *w)
     uchar mincolor[4] = { 255, 255, 255, 255 }, maxcolor[4] = { 0, 0, 0, 0 };
     bvec *dstray = blurlms && (w->w > 1 || w->h > 1) ? (bvec *)w->raydata : w->raybuf;
     bvec minray(255, 255, 255), maxray(0, 0, 0);
-    loop(y, w->h)
+    for(int y = 0; y < w->h; ++y)
     {
-        loop(x, w->w)
+        for(int x = 0; x < w->w; ++x)
         {
             vec l(0, 0, 0);
             const vec &center = *sample++;
-            loopi(aasample-1) l.add(*sample++);
+            for(int i = 0; i < int(aasample-1); ++i) l.add(*sample++);
             if(aasample > 1)
             {
                 l.add(sample[1]);
@@ -897,7 +897,7 @@ static int finishlightmap(lightmapworker *w)
             dstcolor[0] = max(ar, r);
             dstcolor[1] = max(ag, g);
             dstcolor[2] = max(ab, b);
-            loopk(3)
+            for(int k = 0; k < 3; ++k)
             {
                 mincolor[k] = min(mincolor[k], dstcolor[k]);
                 maxcolor[k] = max(maxcolor[k], dstcolor[k]);
@@ -921,7 +921,7 @@ static int finishlightmap(lightmapworker *w)
                     ray->z += a;
                     dstray[0] = bvec(ray->normalize());
                 }
-                loopk(3)
+                for(int k = 0; k < 3; ++k)
                 {
                     minray[k] = min(minray[k], dstray[0][k]);
                     maxray[k] = max(maxray[k], dstray[0][k]);
@@ -940,7 +940,7 @@ static int finishlightmap(lightmapworker *w)
        mincolor[3] >= maxcolor[3])
     {
         uchar color[3];
-        loopk(3) color[k] = (int(maxcolor[k]) + int(mincolor[k])) / 2;
+        for(int k = 0; k < 3; ++k) color[k] = (int(maxcolor[k]) + int(mincolor[k])) / 2;
         if(color[0] <= int(ambientcolor[0]) + lighterror && 
            color[1] <= int(ambientcolor[1]) + lighterror && 
            color[2] <= int(ambientcolor[2]) + lighterror &&
@@ -956,7 +956,7 @@ static int finishlightmap(lightmapworker *w)
             if(w->type&LM_ALPHA) w->colorbuf[3] = mincolor[3];
             if((w->type&LM_TYPE) == LM_BUMPMAP0) 
             {
-                loopk(3) w->raybuf[0][k] = uchar((int(maxray[k])+int(minray[k]))/2);
+                for(int k = 0; k < 3; ++k) w->raybuf[0][k] = uchar((int(maxray[k])+int(minray[k]))/2);
             }
             w->lastlightmap->w = w->w = 1;
             w->lastlightmap->h = w->h = 1;
@@ -988,7 +988,7 @@ static int previewlightmapalpha(lightmapworker *w, float lpu, const vec &origin1
             vec u = x < sidex ? 
                 vec(xstep1).mul(x).add(vec(ystep1).mul(y)).add(origin1) :
                 vec(xstep2).mul(x).add(vec(ystep2).mul(y)).add(origin2);    
-            loopk(3) dst[k] = fullbrightlevel;        
+            for(int k = 0; k < 3; ++k) dst[k] = fullbrightlevel;        
             generatealpha(w, tolerance, u, dst[3]);
             minalpha = min(minalpha, dst[3]);
             maxalpha = max(maxalpha, dst[3]);
@@ -997,17 +997,17 @@ static int previewlightmapalpha(lightmapworker *w, float lpu, const vec &origin1
     if(minalpha==255) return SURFACE_AMBIENT_TOP;
     if(maxalpha==0) return SURFACE_AMBIENT_BOTTOM;
     if(minalpha==maxalpha) w->w = w->h = 1;    
-    if((w->type&LM_TYPE) == LM_BUMPMAP0) loopi(w->w*w->h) w->raybuf[i] = bvec(128, 128, 255);
+    if((w->type&LM_TYPE) == LM_BUMPMAP0) for(int i = 0; i < int(w->w*w->h); ++i) w->raybuf[i] = bvec(128, 128, 255);
     return SURFACE_LIGHTMAP_BLEND;
 }        
 
 static void clearsurfaces(cube *c)
 {
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         if(c[i].ext)
         {
-            loopj(6) 
+            for(int j = 0; j < 6; ++j)
             {
                 surfaceinfo &surf = c[i].ext->surfaces[j];
                 if(!surf.used()) continue;
@@ -1018,7 +1018,7 @@ static void clearsurfaces(cube *c)
                     if(!(c[i].merged&(1<<j))) { surf.numverts &= ~MAXFACEVERTS; continue; }
 
                     vertinfo *verts = c[i].ext->verts() + surf.verts;
-                    loopk(numverts)
+                    for(int k = 0; k < int(numverts); ++k)
                     {
                         vertinfo &v = verts[k];
                         v.u = 0;
@@ -1118,7 +1118,7 @@ static inline void addlight(lightmapworker *w, const extentity &light, int cx, i
             return;
     }
 
-    loopi(4)
+    for(int i = 0; i < 4; ++i)
     {
         vec p(light.o);
         p.sub(v[i]);
@@ -1200,7 +1200,7 @@ static int packlightmaps(lightmapworker *w = NULL)
                 if(l->layers&LAYER_BOTTOM) surf.lmid[1] = layout.lmid;
             }
             ushort offsetx = layout.x*((USHRT_MAX+1)/LM_PACKW), offsety = layout.y*((USHRT_MAX+1)/LM_PACKH);
-            loopk(numverts)
+            for(int k = 0; k < int(numverts); ++k)
             {
                 vertinfo &v = verts[k];
                 v.u += offsetx;
@@ -1342,7 +1342,7 @@ static int setupsurface(lightmapworker *w, plane planes[2], int numplanes, const
 
     float carea = 1e16f;
     vec2 cx(0, 0), cy(0, 0), co(0, 0), cmin(0, 0), cmax(0, 0);
-    loopi(numverts)
+    for(int i = 0; i < int(numverts); ++i)
     {
         vec2 px = vec2(c[i+1 < numverts ? i+1 : 0]).sub(c[i]);
         float len = px.squaredlen();
@@ -1350,7 +1350,7 @@ static int setupsurface(lightmapworker *w, plane planes[2], int numplanes, const
         px.mul(1/sqrtf(len));
         vec2 py(-px.y, px.x), pmin(0, 0), pmax(0, 0);
         if(numplanes >= 2 && (i == 0 || i >= 3)) px.neg();
-        loopj(numverts)
+        for(int j = 0; j < int(numverts); ++j)
         {
             vec2 rj = vec2(c[j]).sub(c[i]), pj(rj.dot(px), rj.dot(py));
             pmin.x = min(pmin.x, pj.x);
@@ -1376,7 +1376,7 @@ static int setupsurface(lightmapworker *w, plane planes[2], int numplanes, const
         
     vec2 cscale = vec2(cmax).sub(cmin).div(vec2(lw-1, lh-1)),
          comin = vec2(cx).mul(cmin.x).add(vec2(cy).mul(cmin.y)).add(co);
-    loopi(numverts)
+    for(int i = 0; i < int(numverts); ++i)
     {
         vec2 ri = vec2(c[i]).sub(comin);
         c[i] = vec2(ri.dot(cx)/cscale.x, ri.dot(cy)/cscale.y);
@@ -1416,7 +1416,7 @@ static int setupsurface(lightmapworker *w, plane planes[2], int numplanes, const
     vec2 texscale(float(USHRT_MAX+1)/LM_PACKW, float(USHRT_MAX+1)/LM_PACKH);
     if(lw != w->w) texscale.x *= float(w->w - 1) / (lw - 1);
     if(lh != w->h) texscale.y *= float(w->h - 1) / (lh - 1);
-    loopk(numverts)
+    for(int k = 0; k < int(numverts); ++k)
     {
         litverts[k].u = ushort(floor(clamp(c[k].x*texscale.x, 0.0f, float(USHRT_MAX))));
         litverts[k].v = ushort(floor(clamp(c[k].y*texscale.y, 0.0f, float(USHRT_MAX)))); 
@@ -1454,7 +1454,7 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
     vertinfo litverts[6*2*MAXFACEVERTS];
     int numlitverts = 0;
     memclear(surfaces);
-    loopi(6)
+    for(int i = 0; i < 6; ++i)
     {
         int usefaces = usefacemask&0xF;
         usefacemask >>= 4;
@@ -1487,7 +1487,7 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
         if(numverts)
         {
             vertinfo *verts = c.ext->verts() + c.ext->surfaces[i].verts;
-            loopj(numverts) curlitverts[j].set(verts[j].getxyz());
+            for(int j = 0; j < int(numverts); ++j) curlitverts[j].set(verts[j].getxyz());
             if(c.merged&(1<<i))
             {
                 msz = 1<<calcmergedsize(i, mo, size, verts, numverts);
@@ -1516,12 +1516,12 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
         }
 
         vec pos[MAXFACEVERTS], n[MAXFACEVERTS], po(ivec(co).mask(~0xFFF));
-        loopj(numverts) pos[j] = vec(curlitverts[j].getxyz()).mul(1.0f/8).add(po);
+        for(int j = 0; j < int(numverts); ++j) pos[j] = vec(curlitverts[j].getxyz()).mul(1.0f/8).add(po);
 
         plane planes[2];
         int numplanes = 0;
         planes[numplanes++].toplane(pos[0], pos[1], pos[2]);
-        if(numverts < 4 || !convex) loopk(numverts) findnormal(pos[k], planes[0], n[k]);
+        if(numverts < 4 || !convex) for(int k = 0; k < int(numverts); ++k) findnormal(pos[k], planes[0], n[k]);
         else
         {
             planes[numplanes++].toplane(pos[0], pos[2], pos[3]);
@@ -1534,7 +1534,7 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
 
         if(shadertype&(SHADER_NORMALSLMS | SHADER_ENVMAP))
         {
-            loopk(numverts) curlitverts[k].norm = encodenormal(n[k]);
+            for(int k = 0; k < int(numverts); ++k) curlitverts[k].norm = encodenormal(n[k]);
             if(!(surf.numverts&MAXFACEVERTS))
             {
                 surf.verts = numlitverts;
@@ -1640,7 +1640,7 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
                 {
                     surf.numverts |= LAYER_DUP;
                     w->lastlightmap->layers |= LAYER_DUP;
-                    loopk(numverts)
+                    for(int k = 0; k < int(numverts); ++k)
                     {
                         vertinfo &src = curlitverts[k];
                         vertinfo &dst = blendverts[k];
@@ -1666,7 +1666,7 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
             default: freelightmap(w); break;
         }
     }
-    loopk(6)
+    for(int k = 0; k < 6; ++k)
     {
         surfaceinfo &surf = surfaces[k];
         if(surf.used())
@@ -1747,7 +1747,7 @@ static void generatelightmaps(cube *c, const ivec &co, int size)
 
     taskprogress++;
 
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         ivec o(i, co, size);
         if(c[i].children)
@@ -1756,7 +1756,7 @@ static void generatelightmaps(cube *c, const ivec &co, int size)
         {
             if(c[i].ext)
             {
-                loopj(6) 
+                for(int j = 0; j < 6; ++j)
                 {
                     surfaceinfo &surf = c[i].ext->surfaces[j];
                     if(surf.lmid[0] >= LMID_RESERVED || surf.lmid[1] >= LMID_RESERVED) goto nextcube;
@@ -1764,7 +1764,7 @@ static void generatelightmaps(cube *c, const ivec &co, int size)
                 }
             }
             int usefacemask = 0;
-            loopj(6) if(c[i].texture[j] != DEFAULT_SKY && (!(c[i].merged&(1<<j)) || (c[i].ext && c[i].ext->surfaces[j].numverts&MAXFACEVERTS)))
+            for(int j = 0; j < 6; ++j) if(c[i].texture[j] != DEFAULT_SKY && (!(c[i].merged&(1<<j)) || (c[i].ext && c[i].ext->surfaces[j].numverts&MAXFACEVERTS)))
             {   
                 usefacemask |= visibletris(c[i], j, o, size)<<(4*j);
             }
@@ -1790,7 +1790,7 @@ static bool previewblends(lightmapworker *w, cube &c, const ivec &co, int size)
     if(isempty(c) || c.material&MAT_ALPHA) return false;
 
     int usefacemask = 0;
-    loopi(6) if(c.texture[i] != DEFAULT_SKY && lookupvslot(c.texture[i], false).layer)
+    for(int i = 0; i < 6; ++i) if(c.texture[i] != DEFAULT_SKY && lookupvslot(c.texture[i], false).layer)
         usefacemask |= visibletris(c, i, co, size)<<(4*i);
     if(!usefacemask) return false;
 
@@ -1798,7 +1798,7 @@ static bool previewblends(lightmapworker *w, cube &c, const ivec &co, int size)
     {
         if(!c.ext) return false;
         bool blends = false;
-        loopi(6) if(c.ext->surfaces[i].numverts&LAYER_BOTTOM)
+        for(int i = 0; i < 6; ++i) if(c.ext->surfaces[i].numverts&LAYER_BOTTOM)
         {
             c.ext->surfaces[i].brighten();
             blends = true;
@@ -1814,7 +1814,7 @@ static bool previewblends(lightmapworker *w, cube &c, const ivec &co, int size)
     vertinfo litverts[6*2*MAXFACEVERTS];
     int numlitverts = 0;
     memcpy(surfaces, c.ext ? c.ext->surfaces : brightsurfaces, sizeof(surfaces));
-    loopi(6)
+    for(int i = 0; i < 6; ++i)
     {
         int usefaces = usefacemask&0xF;
         usefacemask >>= 4;
@@ -1849,12 +1849,12 @@ static bool previewblends(lightmapworker *w, cube &c, const ivec &co, int size)
         if(usefaces&2) curlitverts[numverts++].set(v[(order+3)&3].mul(size).add(vo));
 
         vec pos[4], n[4], po(ivec(co).mask(~0xFFF));
-        loopj(numverts) pos[j] = vec(curlitverts[j].getxyz()).mul(1.0f/8).add(po);
+        for(int j = 0; j < int(numverts); ++j) pos[j] = vec(curlitverts[j].getxyz()).mul(1.0f/8).add(po);
 
         plane planes[2];
         int numplanes = 0;
         planes[numplanes++].toplane(pos[0], pos[1], pos[2]);
-        if(numverts < 4 || !convex) loopk(numverts) n[k] = planes[0];
+        if(numverts < 4 || !convex) for(int k = 0; k < int(numverts); ++k) n[k] = planes[0];
         else
         {
             planes[numplanes++].toplane(pos[0], pos[2], pos[3]);
@@ -1916,7 +1916,7 @@ static bool previewblends(lightmapworker *w, cube &c, const ivec &co, int size)
                 if(packlightmap(*w->lastlightmap, layout)) updatelightmap(layout);
                 surf.lmid[0] = surf.lmid[1] = layout.lmid;
                 ushort offsetx = layout.x*((USHRT_MAX+1)/LM_PACKW), offsety = layout.y*((USHRT_MAX+1)/LM_PACKH);
-                loopk(numverts)
+                for(int k = 0; k < int(numverts); ++k)
                 {
                     vertinfo &v = curlitverts[k];
                     v.u += offsetx;
@@ -2072,7 +2072,7 @@ static void cleanuplocks()
 
 static void setupthreads(int numthreads)
 {
-    loopi(2) lightmaptasks[i].setsize(0);
+    for(int i = 0; i < 2; ++i) lightmaptasks[i].setsize(0);
     lightmapexts.setsize(0);
     packidx = allocidx = 0;
     lightmapping = numthreads;
@@ -2084,7 +2084,7 @@ static void setupthreads(int numthreads)
         ALLOCLOCK(emptycond, SDL_CreateCond);
     }
     while(lightmapworkers.length() < lightmapping) lightmapworkers.add(new lightmapworker);
-    loopi(lightmapping)
+    for(int i = 0; i < int(lightmapping); ++i)
     {
         lightmapworker *w = lightmapworkers[i];
         w->reset();
@@ -2269,9 +2269,9 @@ static void rotatenormals(LightMap &lmlv, int x, int y, int w, int h, bool flipx
 {
     uchar *lv = lmlv.data + 3*(y*LM_PACKW + x);
     int stride = 3*(LM_PACKW-w);
-    loopi(h)
+    for(int i = 0; i < int(h); ++i)
     {
-        loopj(w)
+        for(int j = 0; j < int(w); ++j)
         {
             if(flipx) lv[0] = 255 - lv[0];
             if(flipy) lv[1] = 255 - lv[1];
@@ -2284,7 +2284,7 @@ static void rotatenormals(LightMap &lmlv, int x, int y, int w, int h, bool flipx
 
 static void rotatenormals(cube *c)
 {
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         cube &ch = c[i];
         if(ch.children)
@@ -2293,7 +2293,7 @@ static void rotatenormals(cube *c)
             continue;
         }
         else if(!ch.ext) continue;
-        loopj(6) if(lightmaps.inrange(ch.ext->surfaces[j].lmid[0]+1-LMID_RESERVED))
+        for(int j = 0; j < 6; ++j) if(lightmaps.inrange(ch.ext->surfaces[j].lmid[0]+1-LMID_RESERVED))
         {
             VSlot &vslot = lookupvslot(ch.texture[j], false);
             if(!vslot.rotation) continue;
@@ -2304,7 +2304,7 @@ static void rotatenormals(cube *c)
             if((lmlv.type&LM_TYPE)!=LM_BUMPMAP1) continue;
             ushort x1 = USHRT_MAX, y1 = USHRT_MAX, x2 = 0, y2 = 0;
             vertinfo *verts = ch.ext->verts() + surface.verts;
-            loopk(numverts)
+            for(int k = 0; k < int(numverts); ++k)
             {
                 vertinfo &v = verts[k];
                 x1 = min(x1, v.u);
@@ -2332,11 +2332,11 @@ void fixrotatedlightmaps(cube &c, const ivec &co, int size)
 {
     if(c.children)
     {
-        loopi(8) fixrotatedlightmaps(c.children[i], ivec(i, co, size>>1), size>>1);
+        for(int i = 0; i < 8; ++i) fixrotatedlightmaps(c.children[i], ivec(i, co, size>>1), size>>1);
         return;
     }
     if(!c.ext) return;
-    loopi(6) 
+    for(int i = 0; i < 6; ++i) 
     {
         if(c.merged&(1<<i)) continue;
         surfaceinfo &surf = c.ext->surfaces[i];
@@ -2357,7 +2357,7 @@ void fixrotatedlightmaps(cube &c, const ivec &co, int size)
             verts[1].x = verts[2].x; verts[1].y = verts[2].y; verts[1].z = verts[2].z;
             verts[2].x = verts[3].x; verts[2].y = verts[3].y; verts[2].z = verts[3].z;
             verts[3].x = tmp.x; verts[3].y = tmp.y; verts[3].z = tmp.z;
-            if(surf.numverts&LAYER_DUP) loopk(4) 
+            if(surf.numverts&LAYER_DUP) for(int k = 0; k < 4; ++k)
             {
                 vertinfo &v = verts[k], &b = verts[k+4];
                 b.x = v.x;
@@ -2377,13 +2377,13 @@ void fixrotatedlightmaps(cube &c, const ivec &co, int size)
 
 void fixrotatedlightmaps()
 {
-    loopi(8) fixrotatedlightmaps(worldroot[i], ivec(i, ivec(0, 0, 0), worldsize>>1), worldsize>>1);
+    for(int i = 0; i < 8; ++i) fixrotatedlightmaps(worldroot[i], ivec(i, ivec(0, 0, 0), worldsize>>1), worldsize>>1);
 }
 
 static void copylightmap(LightMap &lm, uchar *dst, size_t stride)
 {
     const uchar *c = lm.data;
-    loopi(LM_PACKH)
+    for(int i = 0; i < int(LM_PACKH); ++i)
     {
         memcpy(dst, c, lm.bpp*LM_PACKW);
         c += lm.bpp*LM_PACKW;
@@ -2421,7 +2421,7 @@ static void findunlit(int i)
     }
     else if((lm.type&LM_TYPE)!=LM_DIFFUSE) return;
     uchar *data = lm.data;
-    loop(y, 2) loop(x, LM_PACKW)
+    for(int y = 0; y < 2; ++y) for(int x = 0; x < LM_PACKW; ++x)
     {
         if(!data[0] && !data[1] && !data[2])
         {
@@ -2602,8 +2602,8 @@ static inline void fastskylight(const vec &o, float tolerance, uchar *skylight, 
             vec(0, 0, 1),
         };
         int hit = 0;
-        loopi(5) if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, flags, t)>1e15f) hit++;
-        loopk(3) skylight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/5.0f);
+        for(int i = 0; i < 5; ++i) if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, flags, t)>1e15f) hit++;
+        for(int k = 0; k < 3; ++k) skylight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/5.0f);
     }
 }
 
@@ -2670,9 +2670,9 @@ void lightreaching(const vec &target, vec &color, vec &dir, bool fast, extentity
         uchar skylight[3];
         if(t) calcskylight(NULL, target, vec(0, 0, 0), 0.5f, skylight, RAY_POLY, t);
         else fastskylight(target, 0.5f, skylight, RAY_POLY, t, fast);
-        loopk(3) color[k] = min(1.5f, max(max(skylight[k]/255.0f, ambient), color[k]));
+        for(int k = 0; k < 3; ++k) color[k] = min(1.5f, max(max(skylight[k]/255.0f, ambient), color[k]));
     }
-    else loopk(3) color[k] = min(1.5f, max(max(ambientcolor[k]/255.0f, ambient), color[k]));
+    else for(int k = 0; k < 3; ++k) color[k] = min(1.5f, max(max(ambientcolor[k]/255.0f, ambient), color[k]));
     if(dir.iszero()) dir = vec(0, 0, 1);
     else dir.normalize();
 }

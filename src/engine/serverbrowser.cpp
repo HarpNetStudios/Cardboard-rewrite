@@ -65,7 +65,7 @@ void resolverinit()
     resultcond = SDL_CreateCond();
 
     SDL_LockMutex(resolvermutex);
-    loopi(RESOLVERTHREADS)
+    for(int i = 0; i < int(RESOLVERTHREADS); ++i)
     {
         resolverthread &rt = resolverthreads.add();
         rt.query = NULL;
@@ -240,14 +240,14 @@ struct pingattempts
     int addattempt(int millis)
     {
         int val = encodeping(millis);
-        loopk(MAXATTEMPTS-1) attempts[k+1] = attempts[k];
+        for(int k = 0; k < int(MAXATTEMPTS-1); ++k) attempts[k+1] = attempts[k];
         attempts[0] = val;
         return val;
     }
 
     bool checkattempt(int val, bool del = true)
     {
-        if(val) loopk(MAXATTEMPTS) if(attempts[k] == val)
+        if(val) for(int k = 0; k < int(MAXATTEMPTS); ++k) if(attempts[k] == val)
         {
             if(del) attempts[k] = 0;
             return true;
@@ -292,7 +292,7 @@ struct serverinfo : pingattempts
     void clearpings()
     {
         ping = WAITING;
-        loopk(MAXPINGS) pings[k] = WAITING;
+        for(int k = 0; k < int(MAXPINGS); ++k) pings[k] = WAITING;
         nextping = 0;
         lastping = -1;
         clearattempts();
@@ -320,7 +320,7 @@ struct serverinfo : pingattempts
     void calcping()
     {
         int numpings = 0, totalpings = 0;
-        loopk(MAXPINGS) if(pings[k] != WAITING) { totalpings += pings[k]; numpings++; }
+        for (int k = 0; k < int(MAXPINGS); ++k) if(pings[k] != WAITING) { totalpings += pings[k]; numpings++; }
         ping = numpings ? totalpings/numpings : WAITING;
     }
 
@@ -434,7 +434,7 @@ void pingservers()
 
     static int lastping = 0;
     if(lastping >= servers.length()) lastping = 0;
-    loopi(maxservpings ? min(servers.length(), maxservpings) : servers.length())
+    for (int i = 0; i < int(maxservpings ? min(servers.length(), maxservpings) : servers.length()); ++i)
     {
         serverinfo &si = *servers[lastping];
         if(++lastping >= servers.length()) lastping = 0;
@@ -524,7 +524,7 @@ void checkpings()
         si->numplayers = getint(p);
         int numattr = getint(p);
         si->attr.setsize(0);
-        loopj(numattr) { int attr = getint(p); if(p.overread()) break; si->attr.add(attr); }
+        for(int j = 0; j < int(numattr); ++j) { int attr = getint(p); if(p.overread()) break; si->attr.add(attr); }
         getstring(text, p);
         filtertext(si->map, text, false);
         getstring(text, p);
@@ -540,7 +540,7 @@ COMMAND(sortservers, "");
 
 VARP(autosortservers, 0, 1, 1);
 VARP(autoupdateservers, 0, 1, 1);
-VARP(slshowhost, 0, 0, 1);
+VARP(serverlistshowhost, 0, 0, 1);
 
 void refreshservers()
 {
@@ -576,9 +576,9 @@ const char *showservers(g3d_gui *cgui, uint *header, int pagemin, int pagemax)
         if(header) execute(header);
         int end = servers.length();
         cgui->pushlist();
-        loopi(10)
+        for(int i = 0; i < 10; ++i)
         {
-            if(!slshowhost && (i==6||i==7)) continue;
+            if(!serverlistshowhost && (i==6||i==7)) continue;
             if(!game::serverinfostartcolumn(cgui, i)) break;
             for(int j = start; j < end; j++)
             {

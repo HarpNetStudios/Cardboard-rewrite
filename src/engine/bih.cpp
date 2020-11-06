@@ -122,7 +122,7 @@ inline bool BIH::traverse(const mesh &m, const vec &o, const vec &ray, const vec
 inline bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int mode)
 {
     vec invray(ray.x ? 1/ray.x : 1e16f, ray.y ? 1/ray.y : 1e16f, ray.z ? 1/ray.z : 1e16f);
-    loopi(nummeshes)
+    for(int i = 0; i < int(nummeshes); ++i)
     {
         mesh &m = meshes[i];
         if(!(mode&RAY_SHADOW) && m.flags&MESH_NOCLIP) continue;
@@ -145,12 +145,12 @@ inline bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &di
 void BIH::build(mesh &m, ushort *indices, int numindices, const ivec &vmin, const ivec &vmax)
 {
     int axis = 2;
-    loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
+    for(int k = 0; k < 2; ++k) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
 
     ivec leftmin, leftmax, rightmin, rightmax;
     int splitleft, splitright;
     int left, right;
-    loopk(3)
+    for(int k = 0; k < 3; ++k)
     {
         leftmin = rightmin = ivec(INT_MAX, INT_MAX, INT_MAX);
         leftmax = rightmax = ivec(INT_MIN, INT_MIN, INT_MIN);
@@ -188,7 +188,7 @@ void BIH::build(mesh &m, ushort *indices, int numindices, const ivec &vmin, cons
         left = right = numindices/2;
         splitleft = SHRT_MIN;
         splitright = SHRT_MAX;
-        loopi(numindices)
+        for(int i = 0; i < int(numindices); ++i)
         {
             const tribb &tri = m.tribbs[indices[i]];
             ivec trimin = ivec(tri.center).sub(ivec(tri.radius)),
@@ -240,7 +240,7 @@ BIH::BIH(vector<mesh> &buildmeshes)
     memcpy(meshes, buildmeshes.getbuf(), sizeof(mesh)*buildmeshes.length());
     tribbs = new tribb[numtris];
     tribb *dsttri = tribbs;
-    loopi(nummeshes)
+    for(int i = 0; i < int(nummeshes); ++i)
     {
         mesh &m = meshes[i];
         m.scale = m.xform.a.magnitude();
@@ -253,7 +253,7 @@ BIH::BIH(vector<mesh> &buildmeshes)
         m.tribbs = dsttri;
         const tri *srctri = m.tris;
         vec mmin(1e16f, 1e16f, 1e16f), mmax(-1e16f, -1e16f, -1e16f);
-        loopj(m.numtris)
+        for(int j = 0; j < int(m.numtris); ++j)
         {
             vec s0 = m.getpos(srctri->vert[0]), s1 = m.getpos(srctri->vert[1]), s2 = m.getpos(srctri->vert[2]),
                 v0 = m.xform.transform(s0), v1 = m.xform.transform(s1), v2 = m.xform.transform(s2),
@@ -267,7 +267,7 @@ BIH::BIH(vector<mesh> &buildmeshes)
             ++srctri;
             ++dsttri;
         }
-        loopk(3) if(fabs(mmax[k] - mmin[k]) < 0.125f)
+        for(int k = 0; k < 3; ++k) if(fabs(mmax[k] - mmin[k]) < 0.125f)
         {
             float mid = (mmin[k] + mmax[k]) / 2;
             mmin[k] = mid - 0.0625f;
@@ -286,11 +286,11 @@ BIH::BIH(vector<mesh> &buildmeshes)
     nodes = new node[numtris];
     node *curnode = nodes;
     ushort *indices = new ushort[numtris];
-    loopi(nummeshes)
+    for(int i = 0; i < int(nummeshes); ++i)
     {
         mesh &m = meshes[i];
         m.nodes = curnode;
-        loopj(m.numtris) indices[j] = j;
+        for(int j = 0; j < int(m.numtris); ++j) indices[j] = j;
         build(m, indices, m.numtris, ivec::floor(m.bbmin), ivec::ceil(m.bbmax));
         curnode += m.numnodes;
     }

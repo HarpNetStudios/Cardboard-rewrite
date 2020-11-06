@@ -54,7 +54,7 @@ void boxs(int orient, vec o, const vec &s)
 void boxs3D(const vec &o, vec s, int g)
 {
     s.mul(g);
-    loopi(6)
+    for(int i = 0; i < 6; ++i)
         boxs(i, o, s);
 }
 
@@ -71,7 +71,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
 
     gle::defvertex();
     gle::begin(GL_LINES);
-    loop(x, xs)
+    for(int x = 0; x < xs; ++x)
     {
         o[R[d]] += g;
         gle::attrib(o);
@@ -79,7 +79,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
         gle::attrib(o);
         o[C[d]] = oy;
     }
-    loop(y, ys)
+    for(int y = 0; y < ys; ++y)
     {
         o[C[d]] += g;
         o[R[d]] = ox;
@@ -214,7 +214,7 @@ void reorient()
 void selextend()
 {
     if(noedit(true)) return;
-    loopi(3)
+    for(int i = 0; i < 3; ++i)
     {
         if(cur[i]<sel.o[i])
         {
@@ -274,8 +274,8 @@ cube &blockcube(int x, int y, int z, const block3 &b, int rgrid) // looks up a w
     return lookupcube(s, rgrid);
 }
 
-#define loopxy(b)        loop(y,(b).s[C[dimension((b).orient)]]) loop(x,(b).s[R[dimension((b).orient)]])
-#define loopxyz(b, r, f) { loop(z,(b).s[D[dimension((b).orient)]]) loopxy((b)) { cube &c = blockcube(x,y,z,b,r); f; } }
+#define loopxy(b)        for(int y = 0; y < int((b).s[C[dimension((b).orient)]]); ++y) for(int x = 0; x < int((b).s[R[dimension((b).orient)]]); ++x)
+#define loopxyz(b, r, f) { for(int z = 0; z < int((b).s[D[dimension((b).orient)]]); ++z) loopxy((b)) { cube &c = blockcube(x,y,z,b,r); f; } }
 #define loopselxyz(f)    { if(local) makeundo(); loopxyz(sel, sel.grid, f); changed(sel); }
 #define selcube(x, y, z) blockcube(x, y, z, sel, sel.grid)
 
@@ -420,12 +420,12 @@ void rendereditcursor()
             vec w = vec(camdir).mul(wdist+0.05f).add(player->o);
             if(!insideworld(w))
             {
-                loopi(3) wdist = min(wdist, ((camdir[i] > 0 ? worldsize : 0) - player->o[i]) / camdir[i]);
+                for(int i = 0; i < 3; ++i) wdist = min(wdist, ((camdir[i] > 0 ? worldsize : 0) - player->o[i]) / camdir[i]);
                 w = vec(camdir).mul(wdist-0.05f).add(player->o);
                 if(!insideworld(w))
                 {
                     wdist = 0;
-                    loopi(3) w[i] = clamp(player->o[i], 0.0f, float(worldsize));
+                    for(int i = 0; i < 3; ++i) w[i] = clamp(player->o[i], 0.0f, float(worldsize));
                 }
             }
             cube *c = &lookupcube(ivec(w));
@@ -625,7 +625,7 @@ static inline void copycube(const cube &src, cube &dst)
     if(src.children)
     {
         dst.children = newcubes(F_EMPTY);
-        loopi(8) copycube(src.children[i], dst.children[i]);
+        for(int i = 0; i < 8; ++i) copycube(src.children[i], dst.children[i]);
     }
 }
 
@@ -654,7 +654,7 @@ block3 *blockcopy(const block3 &s, int rgrid)
 void freeblock(block3 *b, bool alloced = true)
 {
     cube *q = b->c();
-    loopi(b->size()) discardchildren(*q++);
+    for(int i = 0; i < int(b->size()); ++i) discardchildren(*q++);
     if(alloced) delete[] b;
 }
 
@@ -689,7 +689,7 @@ static inline int undosize(undoblock *u)
         block3 *b = u->block();
         cube *q = b->c();
         int size = b->size(), total = size;
-        loopj(size) total += familysize(*q++)*sizeof(cube);
+        for(int j = 0; j < int(size); ++j) total += familysize(*q++)*sizeof(cube);
         return total;
     }
 }
@@ -801,7 +801,7 @@ void makeundo()                        // stores state of selected cubes before 
 static inline int countblock(cube *c, int n = 8)
 {
 	int r = 0;
-	loopi(n) if(c[i].children) r += countblock(c[i].children); else ++r;
+	for(int i = 0; i < int(n); ++i) if(c[i].children) r += countblock(c[i].children); else ++r;
     return r;
 }
 
@@ -877,7 +877,7 @@ static void packcube(cube &c, B &buf)
     if(c.children)
     {
         buf.put(0xFF);
-        loopi(8) packcube(c.children[i], buf);
+        for(int i = 0; i < 8; ++i) packcube(c.children[i], buf);
     }
     else
     {
@@ -901,7 +901,7 @@ static bool packblock(block3 &b, B &buf)
     lilswap(&hdr.orient, 1);
     buf.put((const uchar *)&hdr, sizeof(hdr));
     cube *c = b.c();
-    loopi(b.size()) packcube(c[i], buf);
+    for(int i = 0; i < int(b.size()); ++i) packcube(c[i], buf);
     return true;
 }
 
@@ -915,9 +915,9 @@ static void packvslots(cube &c, vector<uchar> &buf, vector<ushort> &used)
 {
     if(c.children)
     {
-        loopi(8) packvslots(c.children[i], buf, used);
+        for(int i = 0; i < 8; ++i) packvslots(c.children[i], buf, used);
     }
-    else loopi(6)
+    else for (int i = 0; i < 6; ++i)
     {
         ushort index = c.texture[i];
         if(vslots.inrange(index) && vslots[index]->changed && used.find(index) < 0)
@@ -937,7 +937,7 @@ static void packvslots(block3 &b, vector<uchar> &buf)
 {
     vector<ushort> used;
     cube *c = b.c();
-    loopi(b.size()) packvslots(c[i], buf, used);
+    for(int i = 0; i < int(b.size()); ++i) packvslots(c[i], buf, used);
     memset(buf.pad(sizeof(vslothdr)), 0, sizeof(vslothdr));
 }
 
@@ -948,7 +948,7 @@ static void unpackcube(cube &c, B &buf)
     if(mat == 0xFF)
     {
         c.children = newcubes(F_EMPTY);
-        loopi(8) unpackcube(c.children[i], buf);
+        for(int i = 0; i < 8; ++i) unpackcube(c.children[i], buf);
     }
     else
     {
@@ -975,7 +975,7 @@ static bool unpackblock(block3 *&b, B &buf)
     *b = hdr;
     cube *c = b->c();
     memset(c, 0, b->size()*sizeof(cube));
-    loopi(b->size()) unpackcube(c[i], buf);
+    for(int i = 0; i < int(b->size()); ++i) unpackcube(c[i], buf);
     return true;
 }
 
@@ -993,9 +993,9 @@ static void unpackvslots(cube &c, ucharbuf &buf)
 {
     if(c.children)
     {
-        loopi(8) unpackvslots(c.children[i], buf);
+        for(int i = 0; i < 8; ++i) unpackvslots(c.children[i], buf);
     }
-    else loopi(6)
+    else for(int i = 0; i < 6; ++i)
     {
         ushort tex = c.texture[i];
         loopvj(unpackingvslots) if(unpackingvslots[j].index == tex) { c.texture[i] = unpackingvslots[j].vslot->index; break; }
@@ -1018,7 +1018,7 @@ static void unpackvslots(block3 &b, ucharbuf &buf)
     }
 
     cube *c = b.c();
-    loopi(b.size()) unpackvslots(c[i], buf);
+    for(int i = 0; i < int(b.size()); ++i) unpackvslots(c[i], buf);
 
     unpackingvslots.setsize(0);
 }
@@ -1096,7 +1096,7 @@ bool packundo(undoblock *u, int &inlen, uchar *&outbuf, int &outlen)
     if(u->numents)
     {
         undoent *ue = u->ents();
-        loopi(u->numents)
+        for(int i = 0; i < int(u->numents); ++i)
         {
             *(ushort *)buf.pad(2) = lilswap(ushort(ue[i].i));
             entity &e = *(entity *)buf.pad(sizeof(entity));
@@ -1134,7 +1134,7 @@ bool unpackundo(const uchar *inbuf, int inlen, int outlen)
             delete[] outbuf;
             return false;
         }
-        loopi(numents)
+        for(int i = 0; i < int(numents); ++i)
         {
             int idx = lilswap(*(const ushort *)buf.pad(2));
             entity &e = *(entity *)buf.pad(sizeof(entity));
@@ -1347,7 +1347,7 @@ static void genprefabmesh(prefabmesh &r, cube &c, const ivec &co, int size)
     if(c.children)
     {
         neighbourstack[++neighbourdepth] = c.children;
-        loopi(8)
+        for(int i = 0; i < 8; ++i)
         {
             ivec o(i, co, size/2);
             genprefabmesh(r, c.children[i], o, size/2);
@@ -1357,7 +1357,7 @@ static void genprefabmesh(prefabmesh &r, cube &c, const ivec &co, int size)
     else if(!isempty(c))
     {
         int vis;
-        loopi(6) if((vis = visibletris(c, i, co, size)))
+        for(int i = 0; i < 6; ++i) if((vis = visibletris(c, i, co, size)))
         {
             ivec v[4];
             genfaceverts(c, i, v);
@@ -1371,8 +1371,8 @@ static void genprefabmesh(prefabmesh &r, cube &c, const ivec &co, int size)
             if(vis&2) pos[numverts++] = vec(v[(order+3)&3]).mul(size/8.0f).add(vo);
             guessnormals(pos, numverts, norm);
             int index[4];
-            loopj(numverts) index[j] = r.addvert(pos[j], bvec(norm[j]));
-            loopj(numverts-2) if(index[0]!=index[j+1] && index[j+1]!=index[j+2] && index[j+2]!=index[0])
+            for(int j = 0; j < int(numverts); ++j) index[j] = r.addvert(pos[j], bvec(norm[j]));
+            for(int j = 0; j < int(numverts-2); ++j) if(index[0]!=index[j+1] && index[j+1]!=index[j+2] && index[j+2]!=index[0])
             {
                 r.tris.add(index[0]);
                 r.tris.add(index[j+1]);
@@ -1404,7 +1404,7 @@ void genprefabmesh(prefab &p)
 
     prefabmesh r;
     neighbourstack[++neighbourdepth] = worldroot;
-    loopi(8) genprefabmesh(r, worldroot[i], ivec(i, ivec(0, 0, 0), worldsize/2), worldsize/2);
+    for(int i = 0; i < 8; ++i) genprefabmesh(r, worldroot[i], ivec(i, ivec(0, 0, 0), worldsize/2), worldsize/2);
     --neighbourdepth;
     r.setup(p);
 
@@ -1681,7 +1681,7 @@ namespace hmap
         makeundo(hundo);
 
         cube **c = cmap[x][y];
-        loopk(4) c[k] = NULL;
+        for(int k = 0; k < 4; ++k) c[k] = NULL;
         c[1] = getcube(t, 0);
         if(!c[1] || !isempty(*c[1]))
         {   // try up
@@ -1738,10 +1738,10 @@ namespace hmap
 
         bool changed = false;
         int *o[4], best, par, q = 0;
-        loopi(2) loopj(2) o[i+j*2] = &map[x+i][y+j];
+        for(int i = 0; i < 2; ++i) for(int j = 0; j < 2; ++j) o[i+j*2] = &map[x+i][y+j];
         #define pullhmap(I, LT, GT, M, N, A) do { \
             best = I; \
-            loopi(4) if(*o[i] LT best) best = *o[q = i] - M; \
+            for(int i = 0; i < 4; ++i) if(*o[i] LT best) best = *o[q = i] - M; \
             par = (best&(~7)) + N; \
             /* dual layer for extra smoothness */ \
             if(*o[q^3] GT par && !(*o[q^1] LT par || *o[q^2] LT par)) { \
@@ -1752,7 +1752,7 @@ namespace hmap
                 } \
             /* single layer */ \
             } else { \
-                loopj(4) if(*o[j] GT par) { \
+                for(int j = 0; j < 4; ++j) if(*o[j] GT par) { \
                     *o[j] = par; \
                     changed = true; \
                 } \
@@ -1768,8 +1768,8 @@ namespace hmap
         int e[2][2];
         int notempty = 0;
 
-        loopk(4) if(c[k]) {
-            loopi(2) loopj(2) {
+        for(int k = 0; k < 4; ++k) if(c[k]) {
+            for(int i = 0; i < 2; ++i) for(int j = 0; j < 2; ++j) {
                 e[i][j] = min(8, map[x+i][y+j] - (mapz[x][y]+3-k)*8);
                 notempty |= e[i][j] > 0;
             }
@@ -1777,7 +1777,7 @@ namespace hmap
             {
                 c[k]->texture[sel.orient] = c[1]->texture[sel.orient];
                 solidfaces(*c[k]);
-                loopi(2) loopj(2)
+                for(int i = 0; i < 2; ++i) for(int j = 0; j < 2; ++j)
                 {
                     int f = e[i][j];
                     if(f<0 || (f==0 && e[1-i][j]==0 && e[i][1-j]==0))
@@ -1827,7 +1827,7 @@ namespace hmap
         {
             sum = 0;
             div = 9;
-            loopi(3) loopj(3)
+            for(int i = 0; i < 3; ++i) for(int j = 0; j < 3; ++j)
                 if(flags[x+i][y+j] & MAPPED)
                     sum += map[x+i][y+j];
                 else div--;
@@ -1929,7 +1929,7 @@ void linkedpush(cube &c, int d, int x, int y, int dc, int dir)
     ivec v, p;
     getcubevector(c, d, x, y, dc, v);
 
-    loopi(2) loopj(2)
+    for (int i = 0; i < 2; ++i) for(int j = 0; j < 2; ++j)
     {
         getcubevector(c, d, i, j, dc, p);
         if(v==p)
@@ -1942,7 +1942,7 @@ static ushort getmaterial(cube &c)
     if(c.children)
     {
         ushort mat = getmaterial(c.children[7]);
-        loopi(7) if(mat != getmaterial(c.children[i])) return MAT_AIR;
+        for(int i = 0; i < 7; ++i) if(mat != getmaterial(c.children[i])) return MAT_AIR;
         return mat;
     }
     return c.material;
@@ -1981,7 +1981,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
             {
                 solidfaces(c);
                 cube &o = blockcube(x, y, 1, sel, -sel.grid);
-                loopi(6)
+                for(int i = 0; i < 6; ++i)
                     c.texture[i] = o.children ? DEFAULT_GEOM : o.texture[i];
             }
             else
@@ -1996,7 +1996,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
                 linkedpush(c, d, sel.corner&1, sel.corner>>1, dc, seldir); // corner command
             else
             {
-                loop(mx,2) loop(my,2)                                       // pull/push edges command
+                for(int mx = 0; mx < 2; ++mx) for(int my = 0; my < 2; ++my)                                      // pull/push edges command
                 {
                     if(x==0 && mx==0 && sel.cx) continue;
                     if(y==0 && my==0 && sel.cy) continue;
@@ -2014,7 +2014,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
                 uint newbak = c.faces[d];
                 uchar *m = (uchar *)&bak;
                 uchar *n = (uchar *)&newbak;
-                loopk(4) if(n[k] != m[k]) // tries to find partial edit that is valid
+                for(int k = 0; k < 4; ++k) if(n[k] != m[k]) // tries to find partial edit that is valid
                 {
                     c.faces[d] = bak;
                     c.edges[d*4+k] = n[k];
@@ -2114,11 +2114,11 @@ static void remapvslots(cube &c, bool delta, const VSlot &ds, int orient, bool &
 {
     if(c.children)
     {
-        loopi(8) remapvslots(c.children[i], delta, ds, orient, findrep, findedit);
+        for(int i = 0; i < 8; ++i) remapvslots(c.children[i], delta, ds, orient, findrep, findedit);
         return;
     }
     static VSlot ms;
-    if(orient<0) loopi(6)
+    if(orient<0) for(int i = 0; i < 6; ++i)
     {
         VSlot *edit = remapvslot(c.texture[i], delta, ds);
         if(edit)
@@ -2146,7 +2146,7 @@ static void remapvslots(cube &c, bool delta, const VSlot &ds, int orient, bool &
 
 void edittexcube(cube &c, int tex, int orient, bool &findrep)
 {
-    if(orient<0) loopi(6) c.texture[i] = tex;
+    if(orient<0) for(int i = 0; i < 6; ++i) c.texture[i] = tex;
     else
     {
         int i = visibleorient(c, orient);
@@ -2157,7 +2157,7 @@ void edittexcube(cube &c, int tex, int orient, bool &findrep)
         }
         c.texture[i] = tex;
     }
-    if(c.children) loopi(8) edittexcube(c.children[i], tex, orient, findrep);
+    if(c.children) for(int i = 0; i < 8; ++i) edittexcube(c.children[i], tex, orient, findrep);
 }
 
 VAR(allfaces, 0, 0, 1);
@@ -2550,8 +2550,8 @@ COMMAND(settex, "i");
 
 void replacetexcube(cube &c, int oldtex, int newtex)
 {
-    loopi(6) if(c.texture[i] == oldtex) c.texture[i] = newtex;
-    if(c.children) loopi(8) replacetexcube(c.children[i], oldtex, newtex);
+    for(int i = 0; i < 6; ++i) if(c.texture[i] == oldtex) c.texture[i] = newtex;
+    if(c.children) for(int i = 0; i < 8; ++i) replacetexcube(c.children[i], oldtex, newtex);
 }
 
 void mpreplacetex(int oldtex, int newtex, bool insel, selinfo &sel, bool local)
@@ -2563,7 +2563,7 @@ void mpreplacetex(int oldtex, int newtex, bool insel, selinfo &sel, bool local)
     }
     else
     {
-        loopi(8) replacetexcube(worldroot[i], oldtex, newtex);
+        for(int i = 0; i < 8; ++i) replacetexcube(worldroot[i], oldtex, newtex);
     }
     allchanged();
 }
@@ -2602,8 +2602,8 @@ void flipcube(cube &c, int d)
     c.faces[R[d]] = rflip(c.faces[R[d]]);
     if(c.children)
     {
-        loopi(8) if(i&octadim(d)) swap(c.children[i], c.children[i-octadim(d)]);
-        loopi(8) flipcube(c.children[i], d);
+        for(int i = 0; i < 8; ++i) if(i&octadim(d)) swap(c.children[i], c.children[i-octadim(d)]);
+        for(int i = 0; i < 8; ++i) flipcube(c.children[i], d);
     }
 }
 
@@ -2634,7 +2634,7 @@ void rotatecube(cube &c, int d)   // rotates cube clockwise. see pics in cvs for
             c.children[i+col],
             c.children[i+col+row]
         );
-        loopi(8) rotatecube(c.children[i], d);
+        for(int i = 0; i < 8; ++i) rotatecube(c.children[i], d);
     }
 }
 
@@ -2648,8 +2648,8 @@ void mpflip(selinfo &sel, bool local)
     int zs = sel.s[dimension(sel.orient)];
     loopxy(sel)
     {
-        loop(z,zs) flipcube(selcube(x, y, z), dimension(sel.orient));
-        loop(z,zs/2)
+        for(int z = 0; z < zs; ++z) flipcube(selcube(x, y, z), dimension(sel.orient));
+        for(int z = 0; z < int(zs/2); ++z)
         {
             cube &a = selcube(x, y, z);
             cube &b = selcube(x, y, zs-z-1);
@@ -2673,10 +2673,10 @@ void mprotate(int cw, selinfo &sel, bool local)
     int m = sel.s[C[d]] < sel.s[R[d]] ? C[d] : R[d];
     int ss = sel.s[m] = max(sel.s[R[d]], sel.s[C[d]]);
     if(local) makeundo();
-    loop(z,sel.s[D[d]]) loopi(cw>0 ? 1 : 3)
+    for(int z = 0; z < int(sel.s[D[d]]); ++z) for(int i = 0; i < int(cw>0 ? 1 : 3); ++i)
     {
         loopxy(sel) rotatecube(selcube(x,y,z), d);
-        loop(y,ss/2) loop(x,ss-1-y*2) rotatequad
+        for(int y = 0; y < int(ss/2); ++y) for(int x = 0; x < int(ss-1-y*2); ++x) rotatequad
         (
             selcube(ss-1-y, x+y, z),
             selcube(x+y, y, z),
@@ -2708,7 +2708,7 @@ static const struct { const char *name; int filter; } editmatfilters[] =
 void setmat(cube &c, ushort mat, ushort matmask, ushort filtermat, ushort filtermask, int filtergeom)
 {
     if(c.children)
-        loopi(8) setmat(c.children[i], mat, matmask, filtermat, filtermask, filtergeom);
+        for(int i = 0; i < 8; ++i) setmat(c.children[i], mat, matmask, filtermat, filtermask, filtergeom);
     else if((c.material&filtermask) == filtermat)
     {
         switch(filtergeom)
@@ -2761,7 +2761,7 @@ void editmat(char *name, char *filtername)
     int filter = -1;
     if(filtername[0])
     {
-        loopi(sizeof(editmatfilters)/sizeof(editmatfilters[0])) if(!strcmp(editmatfilters[i].name, filtername)) { filter = editmatfilters[i].filter; break; }
+        for(int i = 0; i < int(sizeof(editmatfilters)/sizeof(editmatfilters[0])); ++i) if(!strcmp(editmatfilters[i].name, filtername)) { filter = editmatfilters[i].filter; break; }
         if(filter < 0) filter = findmaterial(filtername);
         if(filter < 0)
         {
@@ -2803,14 +2803,14 @@ struct texturegui : g3d_callback
     {
         int origtab = menutab, numtabs = max((slots.length() + texguiwidth*texguiheight - 1)/(texguiwidth*texguiheight), 1);
         g.start(menustart, 0.04f, &menutab);
-        loopi(numtabs)
+        for(int i = 0; i < int(numtabs); ++i)
         {
             g.tab(!i ? "Textures" : NULL, 0xAAFFAA);
             if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-            loop(h, texguiheight)
+            for(int h = 0; h < texguiheight; ++h)
             {
                 g.pushlist();
-                loop(w, texguiwidth)
+                for(int w = 0; w < texguiwidth; ++w)
                 {
                     extern VSlot dummyvslot;
                     int ti = (i*texguiheight+h)*texguiwidth+w;
@@ -2937,7 +2937,7 @@ void rendertexturepanel(int w, int h)
         gle::defvertex(2);
         gle::deftexcoord0();
 
-        loopi(7)
+        for(int i = 0; i < 7; ++i)
         {
             int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
             if(texmru.inrange(ti))
@@ -2961,13 +2961,13 @@ void rendertexturepanel(int w, int h)
                 if(vslot.rotation)
                 {
 					const texrotation &r = texrotations[vslot.rotation];
-					if(r.swapxy) { swap(xoff, yoff); loopk(4) swap(tc[k].x, tc[k].y); }
-					if(r.flipx) { xoff *= -1; loopk(4) tc[k].x *= -1; }
-					if(r.flipy) { yoff *= -1; loopk(4) tc[k].y *= -1; }
+					if(r.swapxy) { swap(xoff, yoff); for(int k = 0; k < 4; ++k) swap(tc[k].x, tc[k].y); }
+					if(r.flipx) { xoff *= -1; for(int k = 0; k < 4; ++k) tc[k].x *= -1; }
+					if(r.flipy) { yoff *= -1; for(int k = 0; k < 4; ++k) tc[k].y *= -1; }
                 }
-                loopk(4) { tc[k].x = tc[k].x/sx - xoff/tex->xs; tc[k].y = tc[k].y/sy - yoff/tex->ys; }
+                for(int k = 0; k < 4; ++k) { tc[k].x = tc[k].x/sx - xoff/tex->xs; tc[k].y = tc[k].y/sy - yoff/tex->ys; }
                 glBindTexture(GL_TEXTURE_2D, tex->id);
-                loopj(glowtex ? 3 : 2)
+                for(int j = 0; j < int(glowtex?3:2); ++j)
                 {
                     if(j < 2) gle::color(vec(vslot.colorscale).mul(j), texpaneltimer/1000.0f);
                     else

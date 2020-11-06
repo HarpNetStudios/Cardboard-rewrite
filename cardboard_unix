@@ -1,13 +1,13 @@
 #!/bin/sh
-# CARD_DATA should refer to the directory in which Project Crimson data files are placed.
+# CARD_DATA should refer to the directory in which Carmine Impact data files are placed.
 #CARD_DATA=~/cardboard
 #CARD_DATA=/usr/local/cardboard
 CARD_DATA=.
 
-# CARD_BIN should refer to the directory in which Project Crimson executable files are placed.
+# CARD_BIN should refer to the directory in which Carmine Impact executable files are placed.
 CARD_BIN=${CARD_DATA}/bin_unix
 
-# CARD_OPTIONS contains any command line options you would like to start Project Crimson with.
+# CARD_OPTIONS contains any command line options you would like to start Carmine Impact with.
 #CARD_OPTIONS="-f"
 CARD_OPTIONS="-q${HOME}/.cardboard -cOFFLINE"
 

@@ -220,7 +220,7 @@ struct vec
     template<class T> float dist_to_bb(const T &min, const T &max) const
     {
         float sqrdist = 0;
-        loopi(3)
+        for(int i = 0; i < 3; ++i)
         {
             if     (v[i] < min[i]) { float delta = v[i]-min[i]; sqrdist += delta*delta; }
             else if(v[i] > max[i]) { float delta = max[i]-v[i]; sqrdist += delta*delta; }
@@ -705,7 +705,7 @@ struct matrix3
                 axis.x = c.x/r;
                 axis.y = c.y/r;
             }
-            angle = M_PI;
+            angle = (float)M_PI; // suppress warning from C++17
         }
         else if(tr >= 3)
         {

@@ -2,9 +2,9 @@
 
 namespace game
 {
-	char* gametitle = "Project Crimson"; // game name: are you dumb
+	char* gametitle = "Carmine Impact"; // game name: are you dumb
 	char* gamestage = "Alpha"; // stage: alpha, beta, release, whatever
-	char* gameversion = "2.4"; // version: major.minor(.patch)
+	char* gameversion = "2.5"; // version: major.minor(.patch)
 
 	ICOMMAND(version, "", (), {
 		defformatstring(vers, "%s %s %s", gametitle, gamestage, gameversion);
@@ -454,7 +454,7 @@ namespace game
         {
             if(deathscore) showscores(true);
             disablezoom();
-            if(!restore) loopi(NUMGUNS) savedammo[i] = player1->ammo[i];
+            if(!restore) for(int i = 0; i < int(NUMGUNS); ++i) savedammo[i] = player1->ammo[i];
             d->attacking = false;
 			d->secattacking = false;
             if(!restore) d->deaths++;
@@ -971,7 +971,7 @@ namespace game
     ICOMMAND(suicide, "", (), suicide(player1));
     ICOMMAND(kill, "", (), suicide(player1));
 
-    bool needminimap() { return m_ctf || m_protect || m_hold || m_capture || m_collect; }
+    bool needminimap() { return m_ctf || m_protect || m_hold || m_capture || m_collect || m_race; }
 
     void drawicon(int icon, float x, float y, float sz)
     {
@@ -1052,7 +1052,7 @@ namespace game
     {
         gle::color(bvec::hexcolor(0xFFFFFF), 255);
         int gunact = 0; // ammount of active guns
-        loopi(7-ammohudhidemelee) {
+        for(int i = 0; i < int(7-ammohudhidemelee); ++i) {
             gle::color(bvec::hexcolor(!(lastmillis - d->lastaction[i+ammohudhidemelee] >= d->gunwait[i+ammohudhidemelee])?0x888888:0xFFFFFF), 255);
             if(d->ammo[i+ammohudhidemelee]>0)
             {
@@ -1060,7 +1060,9 @@ namespace game
                 if(!ammohudspacing) { spa = gunact; gunact++; } // only count up when ammo is present
                 else spa = i+ammohudhidemelee; // always count up
 
-                drawicon(HICON_FIST+i+ammohudhidemelee, HICON_X + ((healthbar ? 3+ammohudoffset : 4+ammohudoffset) * HICON_STEP) + (spa*HICON_SIZE/ammohudscale), HICON_Y, 120/ammohudscale);
+                
+
+                drawicon(((i==GUN_FIST&&d->jumpstate==2) ? HICON_FIST_OFF : HICON_FIST+i+ammohudhidemelee), HICON_X + ((healthbar ? 3+ammohudoffset : 4+ammohudoffset) * HICON_STEP) + (spa*HICON_SIZE/ammohudscale), HICON_Y, 120/ammohudscale);
             }
         }
     }
@@ -1181,6 +1183,52 @@ namespace game
         enabletexture(true);
     }
 
+    void drawhudannounce(int w, int h)
+    {
+        if(hudannounce_timeout < totalmillis) return;
+        int fw, fh;
+        float zoom = 1.0f;
+        float scale = 500.0f;
+        int left = 0;
+        int top = 0;
+        int duration = hudannounce_timeout - hudannounce_begin;
+        int remaining = hudannounce_timeout - totalmillis;
+
+        switch(hudannounce_effect) {
+            case E_STATIC_CENTER:
+                break;
+            case E_STATIC_LEFT:
+                left = 500;
+                break;
+            case E_STATIC_RIGHT:
+                left = -500;
+                break;
+            case E_STATIC_TOP:
+                top = 400;
+                break;
+            case E_STATIC_BOTTOM:
+                top = -400;
+                break;
+            case E_ZOOM_IN:
+                zoom = 0.5f + ((float) remaining / duration);
+                scale = scale * zoom;
+                break;
+            case E_ZOOM_OUT:
+                zoom = 1.5f - ((float) remaining / duration);
+                scale = scale * zoom;
+                break;
+
+        }
+        // conoutf("drawhudannounce zoom:%1.2f remaining:%d effect:%d text:%s", zoom, hudannounce_timeout - totalmillis, hudannounce_effect, hudannounce_text);
+        glPushMatrix();
+        glScalef(h/scale, h/scale, 1);
+        // glTranslatef(0, 0, +0.9f);
+        text_bounds(hudannounce_text, fw, fh);
+        draw_text(hudannounce_text, w*scale/h - fw/2 - left, scale - fh/2 - top); // , 255, 255, 255, 0);
+        glPopMatrix();
+
+    }
+
     void gameplayhud(int w, int h)
     {
         pushhudmatrix();
@@ -1208,6 +1256,7 @@ namespace game
         if(d->state!=CS_EDITING)
         {
             if(d->state!=CS_SPECTATOR) drawhudicons(d);
+            drawhudannounce(w, h);
             if(showphyscompass) drawphyscompass(d, w, h);
             if(cmode) cmode->drawhud(d, w, h);
         }

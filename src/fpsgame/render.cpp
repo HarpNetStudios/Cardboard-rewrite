@@ -11,7 +11,7 @@ namespace game
     VARP(ragdoll, 0, 1, 1);
     VARP(ragdollmillis, 0, 10000, 300000);
     VARP(ragdollfade, 0, 1000, 300000);
-    VARFP(playermodel, 0, 0, 0, changedplayermodel()); // new player
+    VARFP(playermodel, 0, 0, 5, changedplayermodel()); // new player
     VARP(forceplayermodels, 0, 0, 1);
     VARP(hidedead, 0, 0, 2);
 
@@ -49,9 +49,14 @@ namespace game
         }
     }
 
-    static const playermodelinfo playermodels[1] = // new player
+    static const playermodelinfo playermodels[6] = // new player
     {
-        { "prototype", "prototype/blue", "prototype/red", "prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
+        { "player/prototype", "player/prototype/blue", "player/prototype/red", "player/prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
+        { "player/prototype", "player/prototype/blue", "player/prototype/red", "player/prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
+        { "player/prototype", "player/prototype/blue", "player/prototype/red", "player/prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
+        { "player/prototype", "player/prototype/blue", "player/prototype/red", "player/prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
+        { "player/prototype", "player/prototype/blue", "player/prototype/red", "player/prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
+        { "player/prototype", "player/prototype/blue", "player/prototype/red", "player/prototype/hudguns", NULL, "prototype", "prototype_blue", "prototype_red", true },
     };
 
     int chooserandomplayermodel(int seed)
@@ -102,7 +107,7 @@ namespace game
 
     void preloadplayermodel()
     {
-        loopi(sizeof(playermodels)/sizeof(playermodels[0]))
+        for(int i = 0; i < int(sizeof(playermodels)/sizeof(playermodels[0])); ++i)
         {
             const playermodelinfo *mdl = getplayermodelinfo(i);
             if(!mdl) break;
@@ -361,7 +366,7 @@ namespace game
             previewent = new fpsent;
             previewent->light.color = vec(1, 1, 1);
             previewent->light.dir = vec(0, -1, 2).normalize();
-            loopi(GUN_GL-GUN_FIST) previewent->ammo[GUN_FIST+1+i] = 1;
+            for(int i = 0; i < int(GUN_GL-GUN_FIST); ++i) previewent->ammo[GUN_FIST+1+i] = 1;
         }
         float height = previewent->eyeheight + previewent->aboveeye,
               zrad = height/2;
@@ -405,7 +410,7 @@ namespace game
     void preloadweapons()
     {
         const playermodelinfo &mdl = getplayermodelinfo(player1);
-        loopi(NUMGUNS)
+        for(int i = 0; i < int(NUMGUNS); ++i)
         {
             const char *file = guns[i].file;
             if(!file) continue;
@@ -427,7 +432,7 @@ namespace game
         }
     }
 
-    void preloadsounds()
+    void preloadsounds() // why aren't all sounds preloaded??? -Y 10/10/2020
     {
         for(int i = S_JUMP; i <= S_SPLASH2; i++) preloadsound(i);
         for(int i = S_JUMPPAD; i <= S_ARIFLE; i++) preloadsound(i);

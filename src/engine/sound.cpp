@@ -280,6 +280,7 @@ void startmusic(char *name, char *cmd)
         else
         {
             conoutf(CON_ERROR, "could not play music: %s", file);
+            conoutf(CON_ERROR, "SDL_mixer says: %s", Mix_GetError());
             intret(0);
         }
     }
@@ -335,7 +336,7 @@ template<class T> static void scalewav(T* dst, T* src, size_t len, int scale)
     else for(; src < end; src++)
     {
         T s = src[0];
-        loopi(scale) *dst++ = s;
+        for(int i = 0; i < int(scale); ++i) *dst++ = s;
     }
 }
 
@@ -432,7 +433,7 @@ bool soundsample::load(bool msg)
 
     static const char * const exts[] = { "", ".wav", ".ogg" };
     oldstring filename;
-    loopi(sizeof(exts)/sizeof(exts[0]))
+    for (int i = 0; i < int(sizeof(exts)/sizeof(exts[0])); ++i)
     {
         formatstring(filename, "packages/soundpacks/%s/%s%s", soundpack, name, exts[i]);
         if(msg && !i) renderprogress(0, filename);
@@ -450,7 +451,7 @@ bool soundsample::load(bool msg)
         if(chunk) return true;
     }
 
-    loopi(sizeof(exts)/sizeof(exts[0]))
+    for(int i = 0; i < int(sizeof(exts)/sizeof(exts[0])); ++i)
     {
         formatstring(filename, "packages/soundpacks/default/%s%s", name, exts[i]);
         if(msg && !i) renderprogress(0, filename);
@@ -469,6 +470,7 @@ bool soundsample::load(bool msg)
     }
 
     conoutf(CON_ERROR, "failed to load sample: packages/soundpacks/%s/%s", soundpack, name);
+    conoutf(CON_ERROR, "SDL_mixer says: %s", Mix_GetError());
     return false;
 }
 
@@ -489,7 +491,7 @@ static struct soundtype
         loopv(configs)
         {
             soundconfig &s = configs[i];
-            loopj(s.numslots)
+            for(int j = 0; j < int(s.numslots); ++j)
             {
                 soundslot &c = slots[s.slots+j];
                 if(!strcmp(c.sample->name, name) && (!vol || c.volume==vol)) return i;
@@ -563,7 +565,7 @@ static struct soundtype
     {
         if(nosound || !configs.inrange(n)) return;
         soundconfig &config = configs[n];
-        loopk(config.numslots) slots[config.slots+k].sample->load(true);
+        for(int k = 0; k < int(config.numslots); ++k) slots[config.slots+k].sample->load(true);
     }
 
     bool playing(const soundchannel &chan, const soundconfig &config) const

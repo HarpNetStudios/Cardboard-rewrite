@@ -52,14 +52,14 @@ cubeext *newcubeext(cube &c, int maxverts, bool init)
 cube *newcubes(uint face, int mat)
 {
     cube *c = new cube[8];
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         c->children = NULL;
         c->ext = NULL;
         c->visible = 0;
         c->merged = 0;
         setfaces(*c, face);
-        loopl(6) c->texture[l] = DEFAULT_GEOM;
+        for(int l = 0; l < 6; ++l) c->texture[l] = DEFAULT_GEOM;
         c->material = mat;
         c++;
     }
@@ -70,14 +70,14 @@ cube *newcubes(uint face, int mat)
 int familysize(const cube &c)
 {
     int size = 1;
-    if(c.children) loopi(8) size += familysize(c.children[i]);
+    if(c.children) for(int i = 0; i < 8; ++i) size += familysize(c.children[i]);
     return size;
 }
 
 void freeocta(cube *c)
 {
     if(!c) return;
-    loopi(8) discardchildren(c[i]);
+    for(int i = 0; i < 8; ++i) discardchildren(c[i]);
     delete[] c;
     allocnodes--;
 }
@@ -107,14 +107,14 @@ void discardchildren(cube &c, bool fixtex, int depth)
     if(c.children)
     {
         uint filled = F_EMPTY;
-        loopi(8) 
+        for(int i = 0; i < 8; ++i) 
         {
             discardchildren(c.children[i], fixtex, depth+1);
             filled |= c.children[i].faces[0];
         }
         if(fixtex) 
         {
-            loopi(6) c.texture[i] = getmippedtexture(c, i);
+            for(int i = 0; i < 6; ++i) c.texture[i] = getmippedtexture(c, i);
             if(depth > 0 && filled != F_EMPTY) c.faces[0] = F_SOLID;
         }
         DELETEA(c.children);
@@ -126,7 +126,7 @@ void getcubevector(cube &c, int d, int x, int y, int z, ivec &p)
 {
     ivec v(d, x, y, z);
 
-    loopi(3)
+    for(int i = 0; i < 3; ++i)
         p[i] = edgeget(cubeedge(c, i, v[R[i]], v[C[i]]), v[D[i]]);
 }
 
@@ -134,7 +134,7 @@ void setcubevector(cube &c, int d, int x, int y, int z, const ivec &p)
 {
     ivec v(d, x, y, z);
 
-    loopi(3)
+    for(int i = 0; i < 3; ++i)
         edgeset(cubeedge(c, i, v[R[i]], v[C[i]]), v[D[i]], p[i]);
 }
 
@@ -173,17 +173,17 @@ bool isvalidcube(const cube &c)
 {
     clipplanes p;
     genclipplanes(c, ivec(0, 0, 0), 256, p);
-    loopi(8) // test that cube is convex
+    for(int i = 0; i < 8; ++i) // test that cube is convex
     {
         vec v = p.v[i];
-        loopj(p.size) if(p.p[j].dist(v)>1e-3f) return false;
+        for(int j = 0; j < int(p.size); ++j) if(p.p[j].dist(v)>1e-3f) return false;
     }
     return true;
 }
 
 void validatec(cube *c, int size)
 {
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         if(c[i].children)
         {
@@ -201,7 +201,7 @@ void validatec(cube *c, int size)
         }
         else
         {
-            loopj(3)
+            for(int j = 0; j < 3; ++j)
             {
                 uint f = c[i].faces[j], e0 = f&0x0F0F0F0FU, e1 = (f>>4)&0x0F0F0F0FU;
                 if(e0 == e1 || ((e1+0x07070707U)|(e1-e0))&0xF0F0F0F0U)
@@ -295,7 +295,7 @@ int getmippedtexture(const cube &p, int orient)
 {
     cube *c = p.children;
     int d = dimension(orient), dc = dimcoord(orient), texs[4] = { -1, -1, -1, -1 }, numtexs = 0;
-    loop(x, 2) loop(y, 2)
+    for(int x = 0; x < 2; ++x) for(int y = 0; y < 2; ++y)
     {
         int n = octaindex(d, x, y, dc);
         if(isempty(c[n]))
@@ -305,7 +305,7 @@ int getmippedtexture(const cube &p, int orient)
                 continue;
         }
         int tex = c[n].texture[orient];
-        if(tex > DEFAULT_SKY) loopi(numtexs) if(texs[i] == tex) return tex;
+        if(tex > DEFAULT_SKY) for(int i = 0; i < int(numtexs); ++i) if(texs[i] == tex) return tex;
         texs[numtexs++] = tex;
     }
     loopirev(numtexs) if(!i || texs[i] > DEFAULT_SKY) return texs[i];
@@ -317,7 +317,7 @@ void forcemip(cube &c, bool fixtex)
     cube *ch = c.children;
     emptyfaces(c);
 
-    loopi(8) loopj(8)
+    for(int i = 0; i < 8; ++i) for(int j = 0; j < 8; ++j)
     {
         int n = i^(j==3 ? 4 : (j==4 ? 3 : j));
         if(!isempty(ch[n])) // breadth first search for cube near vert
@@ -330,7 +330,7 @@ void forcemip(cube &c, bool fixtex)
         }
     }
 
-    if(fixtex) loopj(6)
+    if(fixtex) for(int j = 0; j < 6; ++j)
         c.texture[j] = getmippedtexture(c, j);
 }
 
@@ -368,9 +368,9 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
 	if(isempty(c) || isentirelysolid(c))
     {
 		c.children = newcubes(isempty(c) ? F_EMPTY : F_SOLID, c.material);
-        loopi(8)
+        for(int i = 0; i < 8; ++i)
         {
-            loopl(6) c.children[i].texture[l] = c.texture[l];
+            for(int l = 0; l < 6; ++l) c.children[i].texture[l] = c.texture[l];
             if(brighten && !isempty(c)) brightencube(c.children[i]);
         }
         return true;
@@ -378,13 +378,13 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
     cube *ch = c.children = newcubes(F_SOLID, c.material);
     bool perfect = true;
     ivec v[8];
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         getcubevector(c, i, v[i]);
         v[i].mul(2);
     }
 
-    loopj(6)
+    for(int j = 0; j < 6; ++j)
     {
         int d = dimension(j), z = dimcoord(j);
         const ivec &v00 = v[octaindex(d, 0, 0, z)],
@@ -417,7 +417,7 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
             perfect = p2 && (c1 == c2 || crosscenter(v01, v10, C[d], R[d]));
         }    
 
-        loopi(8)
+        for(int i = 0; i < 8; ++i)
         {
             ch[i].texture[j] = c.texture[j];
             int rd = (i>>R[d])&1, cd = (i>>C[d])&1, dd = (i>>D[d])&1;
@@ -429,12 +429,12 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
     }
 
     validatec(ch);
-    if(fullcheck) loopi(8) if(!isvalidcube(ch[i])) // not so good...
+    if(fullcheck) for(int i = 0; i < 8; ++i) if(!isvalidcube(ch[i])) // not so good...
     {
         emptyfaces(ch[i]);
         perfect=false;
     }
-    if(brighten) loopi(8) if(!isempty(ch[i])) brightencube(ch[i]);
+    if(brighten) for(int i = 0; i < 8; ++i) if(!isempty(ch[i])) brightencube(ch[i]);
     return perfect;
 }
 
@@ -442,11 +442,11 @@ bool crushededge(uchar e, int dc) { return dc ? e==0 : e==0x88; }
 
 int visibleorient(const cube &c, int orient)
 {
-    loopi(2)
+    for(int i = 0; i < 2; ++i)
     {
         int a = faceedgesidx[orient][i*2 + 0];
         int b = faceedgesidx[orient][i*2 + 1];
-        loopj(2)
+        for(int j = 0; j < 2; ++j)
         {
             if(crushededge(c.edges[a],j) &&
                crushededge(c.edges[b],j) &&
@@ -472,21 +472,21 @@ bool remip(cube &c, const ivec &co, int size)
     else if((remipprogress++&0xFFF)==1) renderprogress(float(remipprogress)/remiptotal, "remipping...");
 
     bool perfect = true;
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         ivec o(i, co, size);
         if(!remip(ch[i], o, size>>1)) perfect = false;
     }
 
     solidfaces(c); // so texmip is more consistent
-    loopj(6)
+    for(int j = 0; j < 6; ++j)
         c.texture[j] = getmippedtexture(c, j); // parents get child texs regardless
 
     if(!perfect) return false;
     if(size<<1 > 0x1000) return false;
 
     ushort mat = MAT_AIR;
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         mat = ch[i].material;
         if((mat&MATF_CLIP) == MAT_NOCLIP || mat&MAT_ALPHA)
@@ -515,7 +515,7 @@ bool remip(cube &c, const ivec &co, int size)
 
     cube *nh = n.children;
     uchar vis[6] = {0, 0, 0, 0, 0, 0};
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         if(ch[i].faces[0] != nh[i].faces[0] ||
            ch[i].faces[1] != nh[i].faces[1] ||
@@ -525,25 +525,25 @@ bool remip(cube &c, const ivec &co, int size)
         if(isempty(ch[i]) && isempty(nh[i])) continue;
 
         ivec o(i, co, size);
-        loop(orient, 6)
+        for(int orient = 0; orient < 6; ++orient)
             if(visibleface(ch[i], orient, o, size, MAT_AIR, (mat&MAT_ALPHA)^MAT_ALPHA, MAT_ALPHA))
             {
                 if(ch[i].texture[orient] != n.texture[orient]) { freeocta(nh); return false; }
                 vis[orient] |= 1<<i;
             }
     }
-    if(mipvis) loop(orient, 6)
+    if(mipvis) for(int orient = 0; orient < 6; ++orient)
     {
         int mask = 0;
-        loop(x, 2) loop(y, 2) mask |= 1<<octaindex(dimension(orient), x, y, dimcoord(orient));
+        for(int x = 0; x < 2; ++x) for(int y = 0; y < 2; ++y) mask |= 1<<octaindex(dimension(orient), x, y, dimcoord(orient));
         if(vis[orient]&mask && (vis[orient]&mask)!=mask) { freeocta(nh); return false; }
     }
 
     freeocta(nh);
     discardchildren(c);
-    loopi(3) c.faces[i] = n.faces[i];
+    for(int i = 0; i < 3; ++i) c.faces[i] = n.faces[i];
     c.material = mat;
-    loopi(6) if(vis[i]) c.visible |= 1<<i;
+    for(int i = 0; i < 6; ++i) if(vis[i]) c.visible |= 1<<i;
     if(c.visible) c.visible |= 0x40;
     brightencube(c);
     return true;
@@ -555,7 +555,7 @@ void mpremip(bool local)
     if(local) game::edittrigger(sel, EDIT_REMIP);
     remipprogress = 1;
     remiptotal = allocnodes;
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         ivec o(i, ivec(0, 0, 0), worldsize>>1);
         remip(worldroot[i], o, worldsize>>2);
@@ -634,7 +634,7 @@ void edgespan2vectorcube(cube &c)
 {
     if(isentirelysolid(c) || isempty(c)) return;
     cube o = c;
-    loop(x, 2) loop(y, 2) loop(z, 2)
+    for(int x = 0; x < 2; ++x) for(int y = 0; y < 2; ++y) for(int z = 0; z < 2; ++z)
     {
         ivec p(8*x, 8*y, 8*z);
         vec v;
@@ -814,7 +814,7 @@ int faceorder(const cube &c, int orient) // gets above 'fv' so that each face is
 
 static inline void faceedges(const cube &c, int orient, uchar edges[4])
 {
-    loopk(4) edges[k] = c.edges[faceedgesidx[orient][k]];
+    for(int k = 0; k < 4; ++k) edges[k] = c.edges[faceedgesidx[orient][k]];
 }
 
 uint faceedges(const cube &c, int orient)
@@ -929,12 +929,12 @@ static inline bool insideface(const ivec2 *p, int nump, const ivec2 *o, int numo
 {
     int bounds = 0;
     ivec2 prev = o[numo-1];
-    loopi(numo)
+    for(int i = 0; i < int(numo); ++i)
     {
         const ivec2 &cur = o[i];
         ivec2 dir(cur.x-prev.x, cur.y-prev.y);
         int offset = dir.x*prev.y - dir.y*prev.x;
-        loopj(nump) if(dir.x*p[j].y - dir.y*p[j].x > offset) return false;
+        for(int j = 0; j < int(nump); ++j) if(dir.x*p[j].y - dir.y*p[j].x > offset) return false;
         bounds++;
         prev = cur;
     }
@@ -949,14 +949,14 @@ static inline int clipfacevecs(const ivec2 *o, int numo, int cx, int cy, int siz
 
     int r = 0;
     ivec2 prev = o[numo-1];
-    loopi(numo)
+    for(int i = 0; i < int(numo); ++i)
     {
         const ivec2 &cur = o[i];
         r += clipfacevec(prev, ivec2(cur.x-prev.x, cur.y-prev.y), cx, cy, size, &rvecs[r]);
         prev = cur;
     }
     ivec2 corner[4] = {ivec2(cx, cy), ivec2(cx+size, cy), ivec2(cx+size, cy+size), ivec2(cx, cy+size)};
-    loopi(4) if(insideface(&corner[i], 1, o, numo)) rvecs[r++] = corner[i];
+    for(int i = 0; i < 4; ++i) if(insideface(&corner[i], 1, o, numo)) rvecs[r++] = corner[i];
     ASSERT(r <= 8);
     return r;
 }
@@ -1002,7 +1002,7 @@ static inline bool occludesface(const cube &c, int orient, const ivec &o, int si
 
     size >>= 1;
     int coord = dimcoord(orient);
-    loopi(8) if(octacoord(dim, i) == coord)
+    for(int i = 0; i < 8; ++i) if(octacoord(dim, i) == coord)
     {
         if(!occludesface(c.children[i], orient, ivec(i, o, size), size, vo, vsize, vmat, nmat, matmask, vf, numv)) return false;
     }
@@ -1162,7 +1162,7 @@ int visibletris(const cube &c, int orient, const ivec &co, int size, ushort nmat
 
     do
     {
-        loopi(2)
+        for(int i = 0; i < 2; ++i)
         {
             const int *verts = triverts[order][coord][i];
             ivec2 tf[3] = { cf[verts[0]], cf[verts[1]], cf[verts[2]] };
@@ -1220,7 +1220,7 @@ void genclipplanes(const cube &c, const ivec &co, int size, clipplanes &p, bool 
     p.visible = 0;
     if(collide || (c.visible&0xC0) == 0x40)
     {
-        loopi(6) if(c.visible&(1<<i))
+        for(int i = 0; i < 6; ++i) if(c.visible&(1<<i))
         {
             int vis;
             if(flataxisface(c, i)) p.visible |= 1<<i;
@@ -1236,7 +1236,7 @@ void genclipplanes(const cube &c, const ivec &co, int size, clipplanes &p, bool 
     else if(c.visible&0x80)
     {
         int vis;
-        loopi(6) if((vis = visibletris(c, i, co, size)))
+        for(int i = 0; i < 6; ++i) if((vis = visibletris(c, i, co, size)))
         {
             if(flataxisface(c, i)) p.visible |= 1<<i;
             else
@@ -1305,7 +1305,7 @@ int mergefaces(int orient, facebounds *m, int sz)
     quicksort(m, sz, mergefacecmp);
 
     int nsz = 0;
-    loopi(sz) nsz = mergeface(orient, m, nsz, m[i]);
+    for(int i = 0; i < int(sz); ++i) nsz = mergeface(orient, m, nsz, m[i]);
     return nsz;
 }
 
@@ -1334,7 +1334,7 @@ void mincubeface(const cube &cu, int orient, const ivec &o, int size, const face
     {
         size >>= 1;
         int coord = dimcoord(orient);
-        loopi(8) if(octacoord(dim, i) == coord)
+        for(int i = 0; i < 8; ++i) if(octacoord(dim, i) == coord)
             mincubeface(cu.children[i], orient, ivec(i, o, size), size, orig, cf, nmat, matmask);
         return;
     }
@@ -1433,7 +1433,7 @@ bool clippoly(poly &p, const facebounds &b)
 {
     pvert verts1[MAXFACEVERTS+4], verts2[MAXFACEVERTS+4];
     int numverts1 = 0, numverts2 = 0, px = p.verts[p.numverts-1].x, py = p.verts[p.numverts-1].y; 
-    loopi(p.numverts)
+    for(int i = 0; i < int(p.numverts); ++i)
     {
         int x = p.verts[i].x, y = p.verts[i].y;
         if(x < b.u1) 
@@ -1461,7 +1461,7 @@ bool clippoly(poly &p, const facebounds &b)
     if(numverts1 < 3) return false;
     px = verts1[numverts1-1].x;
     py = verts1[numverts1-1].y;
-    loopi(numverts1)
+    for(int i = 0; i < int(numverts1); ++i)
     {
         int x = verts1[i].x, y = verts1[i].y;
         if(y < b.v1)
@@ -1512,7 +1512,7 @@ bool genpoly(cube &cu, int orient, const ivec &o, int size, int vis, ivec &n, in
     }
 
     ivec po = ivec(o).mask(0xFFF).shl(3);
-    loopk(4) v[k].mul(size).add(po);
+    for(int k = 0; k < 4; ++k) v[k].mul(size).add(po);
     offset = -n.dot(v[3]);
     
     int r = R[dim], c = C[dim], order = vis&4 ? 1 : 0;
@@ -1592,8 +1592,8 @@ struct plink : pedge
 bool mergepolys(int orient, hashset<plink> &links, vector<plink *> &queue, int owner, poly &p, poly &q, const pedge &e)
 {
     int pe = -1, qe = -1;
-    loopi(p.numverts) if(p.verts[i] == e.from) { pe = i; break; }
-    loopi(q.numverts) if(q.verts[i] == e.to) { qe = i; break; }
+    for(int i = 0; i < int(p.numverts); ++i) if(p.verts[i] == e.from) { pe = i; break; }
+    for(int i = 0; i < int(q.numverts); ++i) if(q.verts[i] == e.to) { qe = i; break; }
     if(pe < 0 || qe < 0) return false;
     if(p.verts[(pe+1)%p.numverts] != e.to || q.verts[(qe+1)%q.numverts] != e.from) return false;
     /*
@@ -1605,14 +1605,14 @@ bool mergepolys(int orient, hashset<plink> &links, vector<plink *> &queue, int o
      */
     pvert verts[2*MAXFACEVERTS];
     int numverts = 0, index = pe+2; // starts at A = T+1, ends at F = T+p.numverts
-    loopi(p.numverts-1)
+    for(int i = 0; i < int(p.numverts-1); ++i)
     {
         if(index >= p.numverts) index -= p.numverts;
         verts[numverts++] = p.verts[index++];
     }
     index = qe+2; // starts at C = T+2 = F+1, ends at T = T+q.numverts
     int px = int(verts[numverts-1].x) - int(verts[numverts-2].x), py = int(verts[numverts-1].y) - int(verts[numverts-2].y);
-    loopi(q.numverts-1)
+    for(int i = 0; i < int(q.numverts-1); ++i)
     {
         if(index >= q.numverts) index -= q.numverts;
         pvert &src = q.verts[index++];
@@ -1639,7 +1639,7 @@ bool mergepolys(int orient, hashset<plink> &links, vector<plink *> &queue, int o
     memcpy(p.verts, verts, numverts*sizeof(pvert));
 
     int prev = p.numverts-1;
-    loopj(p.numverts)
+    for(int j = 0; j < int(p.numverts); ++j)
     {
         pedge e(p.verts[prev], p.verts[j]);
         int order = e.from.x > e.to.x || (e.from.x == e.to.x && e.from.y > e.to.y) ? 1 : 0;
@@ -1666,7 +1666,7 @@ void addmerge(cube &cu, int orient, const ivec &co, const ivec &n, int offset, p
     vertinfo verts[MAXFACEVERTS];
     surf.numverts |= p.numverts;
     int dim = dimension(orient), coord = dimcoord(orient), c = C[dim], r = R[dim];
-    loopk(p.numverts)
+    for(int k = 0; k < int(p.numverts); ++k)
     {
         pvert &src = p.verts[coord ? k : p.numverts-1-k];
         vertinfo &dst = verts[k];
@@ -1684,7 +1684,7 @@ void addmerge(cube &cu, int orient, const ivec &co, const ivec &n, int offset, p
         {
             ivec v0 = verts[0].getxyz();
             const vertinfo *oldverts = cu.ext->verts() + oldsurf.verts;
-            loopj(numverts) if(v0 == oldverts[j].getxyz()) 
+            for(int j = 0; j < int(numverts); ++j) if(v0 == oldverts[j].getxyz()) 
             { 
                 for(int k = 1; k < numverts; k++)
                 {
@@ -1727,7 +1727,7 @@ void mergepolys(int orient, const ivec &co, const ivec &n, int offset, vector<po
     {
         poly &p = polys[i];
         int prev = p.numverts-1;
-        loopj(p.numverts)
+        for(int j = 0; j < int(p.numverts); ++j)
         {
             pedge e(p.verts[prev], p.verts[j]);
             int order = e.from.x > e.to.x || (e.from.x == e.to.x && e.from.y > e.to.y) ? 1 : 0;
@@ -1766,12 +1766,12 @@ void genmerges(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size = wo
 {
     if((genmergeprogress++&0xFFF)==0) renderprogress(float(genmergeprogress)/allocnodes, "merging faces...");
     neighbourstack[++neighbourdepth] = c;
-    loopi(8)
+    for(int i = 0; i < 8; ++i)
     {
         ivec co(i, o, size);
         int vis;
         if(c[i].children) genmerges(c[i].children, co, size>>1);
-        else if(!isempty(c[i])) loopj(6) if((vis = visibletris(c[i], j, co, size)))
+        else if(!isempty(c[i])) for(int j = 0; j < 6; ++j) if((vis = visibletris(c[i], j, co, size)))
         {
             cfkey k;
             poly p;
@@ -1857,7 +1857,7 @@ static void invalidatemerges(cube &c)
         }
         if(c.ext->tjoints >= 0) c.ext->tjoints = -1;
     }
-    if(c.children) loopi(8) invalidatemerges(c.children[i]);
+    if(c.children) for(int i = 0; i < 8; ++i) invalidatemerges(c.children[i]);
 }
 
 static int invalidatedmerges = 0;
